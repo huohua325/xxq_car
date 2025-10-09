@@ -1,0 +1,38 @@
+# Python依赖库列表 - xxq智能小车项目（软件组）
+
+# 核心计算库
+numpy>=1.24.0              # 数值计算
+scipy>=1.10.0              # 科学计算（滤波、优化）
+
+# 串口通信
+pyserial>=3.5              # 蓝牙串口通信
+
+# 可视化
+matplotlib>=3.7.0          # 实时地图可视化
+pygame>=2.5.0              # 游戏引擎，用于更流畅的实时渲染（可选）
+
+# 路径规划
+pathfinding>=1.0.0         # A*等路径规划算法
+
+# 数据处理（可选）
+pandas>=2.0.0              # 数据分析（可选）
+
+# 图像处理（可选）
+opencv-python>=4.8.0       # OpenCV（可选）
+Pillow>=10.0.0             # 图像处理（可选）
+
+# 开发工具
+pytest>=7.4.0              # 单元测试
+black>=23.0.0              # 代码格式化
+flake8>=6.0.0              # 代码检查
+
+# 类型检查（可选）
+mypy>=1.5.0                # 静态类型检查（可选）
+
+# 安装说明：
+# 1. 创建虚拟环境：python -m venv venv
+# 2. 激活虚拟环境：
+#    - Windows: venv\Scripts\activate
+#    - Linux/Mac: source venv/bin/activate
+# 3. 安装依赖：pip install -r requirements.txt
+

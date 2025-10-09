@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# 数据文件
+data/logs/*.log
+data/logs/*.txt
+data/recordings/*.pkl
+data/recordings/*.csv
+*.pyc
+
+# 临时文件
+*.tmp
+*.bak
+*.log
+
+# 操作系统
+Thumbs.db
+.DS_Store
+
+# 保留目录结构
+!data/logs/.gitkeep
+!data/maps/.gitkeep
+!data/recordings/.gitkeep
+
+
+
+

@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>xxq Robot - SLAM实时可视化</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+        }
+
+        .map-panel {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .map-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1;
+            background: #f3f4f6;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid #e5e7eb;
+        }
+
+        #mapCanvas {
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+            cursor: crosshair;
+        }
+
+        .map-overlay {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card h2::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .stat-item {
+            background: #f9fafb;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .stat-value.large {
+            font-size: 32px;
+        }
+
+        .pose-table {
+            width: 100%;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .pose-table td {
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .pose-table td:first-child {
+            color: #6b7280;
+            width: 80px;
+        }
+
+        .pose-table td:last-child {
+            font-weight: 600;
+            color: #1f2937;
+            text-align: right;
+        }
+
+        .legend {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 1px solid #d1d5db;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e5e7eb;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .fps-counter {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                grid-template-columns: 1fr 1fr;
+                display: grid;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🤖 xxq Robot - SLAM实时可视化系统</h1>
+            <div class="status-indicator">
+                <span class="status-dot"></span>
+                <span id="connectionStatus">已连接</span>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-grid">
+            <!-- Map Panel -->
+            <div class="map-panel">
+                <h2 style="margin-bottom: 15px; font-size: 20px;">占据栅格地图</h2>
+                <div class="map-container">
+                    <canvas id="mapCanvas"></canvas>
+                    <div class="map-overlay">
+                        帧数: <span id="frameCount">0</span> | 
+                        FPS: <span id="fpsDisplay">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Statistics Card -->
+                <div class="card">
+                    <h2>📊 探索统计</h2>
+                    <div style="margin-bottom: 15px;">
+                        <div class="stat-label">探索进度</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressBar">0%</div>
+                        </div>
+                    </div>
+                    <div class="stat-grid">
+                        <div class="stat-item">
+                            <div class="stat-label">已占用</div>
+                            <div class="stat-value" id="occupiedCells">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">空闲区</div>
+                            <div class="stat-value" id="freeCells">0</div>
+                        </div>
+                        <div class="stat-item" style="grid-column: span 2;">
+                            <div class="stat-label">未知区域</div>
+                            <div class="stat-value" id="unknownCells">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Robot Pose Card -->
+                <div class="card">
+                    <h2>📍 机器人位姿</h2>
+                    <table class="pose-table">
+                        <tr>
+                            <td>X 坐标</td>
+                            <td id="poseX">0.000 m</td>
+                        </tr>
+                        <tr>
+                            <td>Y 坐标</td>
+                            <td id="poseY">0.000 m</td>
+                        </tr>
+                        <tr>
+                            <td>朝向角</td>
+                            <td id="poseTheta">0.0°</td>
+                        </tr>
+                        <tr>
+                            <td>线速度</td>
+                            <td id="velocityV">0.00 m/s</td>
+                        </tr>
+                        <tr>
+                            <td>角速度</td>
+                            <td id="velocityW">0.00 rad/s</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Legend Card -->
+                <div class="card">
+                    <h2>🎨 图例</h2>
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: white;"></div>
+                            <span>空闲区域</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: black;"></div>
+                            <span>障碍物</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #808080;"></div>
+                            <span>未知区域</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #3b82f6; border-radius: 50%;"></div>
+                            <span>机器人位置</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #ef4444;"></div>
+                            <span>雷达点云</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #10b981;"></div>
+                            <span>规划路径</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #f59e0b;"></div>
+                            <span>前沿点</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // WebSocket连接
+        const socket = io();
+        
+        // Canvas
+        const canvas = document.getElementById('mapCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 状态
+        let config = null;
+        let lastUpdateTime = Date.now();
+        let frameCounter = 0;
+        let fps = 0;
+        
+        // 连接事件
+        socket.on('connect', () => {
+            console.log('WebSocket已连接');
+            document.getElementById('connectionStatus').textContent = '已连接';
+            
+            // 请求配置
+            fetch('/api/config')
+                .then(res => res.json())
+                .then(data => {
+                    config = data;
+                    console.log('地图配置:', config);
+                    setupCanvas();
+                });
+        });
+        
+        socket.on('disconnect', () => {
+            console.log('WebSocket已断开');
+            document.getElementById('connectionStatus').textContent = '连接断开';
+        });
+        
+        // 接收更新数据
+        socket.on('update', (data) => {
+            updateVisualization(data);
+            updateFPS();
+        });
+        
+        // 设置Canvas尺寸
+        function setupCanvas() {
+            if (!config) return;
+            canvas.width = config.width;
+            canvas.height = config.height;
+        }
+        
+        // 更新可视化
+        function updateVisualization(data) {
+            if (!ctx || !config) return;
+            
+            // 清空画布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 1. 绘制地图
+            if (data.map_image) {
+                const img = new Image();
+                img.onload = function() {
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    // 绘制其他元素
+                    drawLidarPoints(data.lidar_points);
+                    drawPath(data.path);
+                    drawFrontiers(data.frontiers);
+                    drawRobot(data.robot_pose);
+                };
+                img.src = data.map_image;
+            }
+            
+            // 更新统计数据
+            updateStatistics(data.statistics);
+            
+            // 更新位姿
+            updatePose(data.robot_pose, data.velocity);
+            
+            // 更新帧数
+            document.getElementById('frameCount').textContent = data.frame;
+        }
+        
+        // 绘制雷达点云
+        function drawLidarPoints(points) {
+            if (!points || points.length === 0) return;
+            
+            ctx.fillStyle = '#ef4444';
+            points.forEach(point => {
+                const [x, y] = worldToGrid(point[0], point[1]);
+                ctx.beginPath();
+                ctx.arc(x, canvas.height - y, 2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+        
+        // 绘制路径
+        function drawPath(path) {
+            if (!path || path.length < 2) return;
+            
+            ctx.strokeStyle = '#10b981';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            const [x0, y0] = worldToGrid(path[0][0], path[0][1]);
+            ctx.moveTo(x0, canvas.height - y0);
+            
+            for (let i = 1; i < path.length; i++) {
+                const [x, y] = worldToGrid(path[i][0], path[i][1]);
+                ctx.lineTo(x, canvas.height - y);
+            }
+            
+            ctx.stroke();
+        }
+        
+        // 绘制前沿点
+        function drawFrontiers(frontiers) {
+            if (!frontiers || frontiers.length === 0) return;
+            
+            ctx.fillStyle = '#f59e0b';
+            frontiers.forEach(point => {
+                const [x, y] = worldToGrid(point[0], point[1]);
+                ctx.beginPath();
+                ctx.arc(x, canvas.height - y, 4, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+        
+        // 绘制机器人
+        function drawRobot(pose) {
+            if (!pose) return;
+            
+            const [x, y, theta] = pose;
+            const [gx, gy] = worldToGrid(x, y);
+            const gy_canvas = canvas.height - gy;
+            
+            // 绘制机器人位置（蓝色圆圈）
+            ctx.fillStyle = '#3b82f6';
+            ctx.strokeStyle = '#1e40af';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(gx, gy_canvas, 8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            
+            // 绘制朝向箭头
+            const arrowLen = 20;
+            const dx = arrowLen * Math.cos(theta);
+            const dy = arrowLen * Math.sin(theta);
+            
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(gx, gy_canvas);
+            ctx.lineTo(gx + dx, gy_canvas - dy);
+            ctx.stroke();
+        }
+        
+        // 世界坐标转栅格坐标
+        function worldToGrid(wx, wy) {
+            const gx = Math.round(wx / config.resolution + config.origin_x);
+            const gy = Math.round(wy / config.resolution + config.origin_y);
+            return [gx, gy];
+        }
+        
+        // 更新统计数据
+        function updateStatistics(stats) {
+            if (!stats) return;
+            
+            const progress = (stats.explored_ratio * 100).toFixed(1);
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('progressBar').textContent = progress + '%';
+            
+            document.getElementById('occupiedCells').textContent = stats.occupied_cells.toLocaleString();
+            document.getElementById('freeCells').textContent = stats.free_cells.toLocaleString();
+            document.getElementById('unknownCells').textContent = stats.unknown_cells.toLocaleString();
+        }
+        
+        // 更新位姿
+        function updatePose(pose, velocity) {
+            if (pose) {
+                document.getElementById('poseX').textContent = pose[0].toFixed(3) + ' m';
+                document.getElementById('poseY').textContent = pose[1].toFixed(3) + ' m';
+                document.getElementById('poseTheta').textContent = (pose[2] * 180 / Math.PI).toFixed(1) + '°';
+            }
+            
+            if (velocity) {
+                document.getElementById('velocityV').textContent = velocity[0].toFixed(2) + ' m/s';
+                document.getElementById('velocityW').textContent = velocity[1].toFixed(2) + ' rad/s';
+            }
+        }
+        
+        // 更新FPS
+        function updateFPS() {
+            frameCounter++;
+            const now = Date.now();
+            const elapsed = now - lastUpdateTime;
+            
+            if (elapsed >= 1000) {
+                fps = Math.round(frameCounter * 1000 / elapsed);
+                document.getElementById('fpsDisplay').textContent = fps;
+                frameCounter = 0;
+                lastUpdateTime = now;
+            }
+        }
+    </script>
+</body>
+</html>
+
+

@@ -9,6 +9,12 @@ import matplotlib.patches as patches
 from matplotlib.animation import FuncAnimation
 from typing import Tuple, List, Optional, Callable
 from collections import deque
+import sys
+import os
+
+# 添加项目根目录到路径
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+import config
 
 
 class MapVisualizer:
@@ -38,16 +44,23 @@ class MapVisualizer:
     """
     
     def __init__(self, map_obj, 
-                 figsize: Tuple[int, int] = (12, 10),
-                 enable_multi_window: bool = False):
+                 figsize: Optional[Tuple[int, int]] = None,
+                 enable_multi_window: Optional[bool] = None):
         """初始化可视化器
         
         Args:
             map_obj: OccupancyGridMap对象
-            figsize: 图形大小
-            enable_multi_window: 是否启用多窗口布局
+            figsize: 图形大小（宽, 高）单位英寸，None则使用config.VISUALIZE_WINDOW_SIZE
+            enable_multi_window: 是否启用多窗口布局，None则使用config.VISUALIZE_MULTI_WINDOW
         """
         self.map_obj = map_obj
+        
+        # ✅ 从config读取参数（允许外部覆盖）
+        if figsize is None:
+            figsize = config.VISUALIZE_WINDOW_SIZE
+        if enable_multi_window is None:
+            enable_multi_window = config.VISUALIZE_MULTI_WINDOW
+        
         self.enable_multi_window = enable_multi_window
         
         # 创建图形窗口
@@ -64,11 +77,11 @@ class MapVisualizer:
         # 设置标题
         self.fig.suptitle('xxq Robot - Real-time SLAM Visualization System', fontsize=16, fontweight='bold')
         
-        # 配置（需要在其他初始化之前设置）
-        self.show_lidar = True
-        self.show_path = True
-        self.show_frontiers = True
-        self.show_trajectory = True
+        # ✅ 配置（从config读取）
+        self.show_lidar = config.SHOW_LIDAR_POINTS
+        self.show_path = config.SHOW_PATH
+        self.show_frontiers = config.SHOW_FRONTIERS
+        self.show_trajectory = config.SHOW_TRAJECTORY
         self.show_grid = False  # 网格线（默认关闭，影响性能）
         
         # 地图显示
@@ -88,15 +101,15 @@ class MapVisualizer:
         # 前沿点显示
         self.frontier_scatter = None
         
-        # 轨迹显示
+        # ✅ 轨迹显示（从config读取缓冲区大小）
         self.trajectory_line = None
-        self.trajectory_history = deque(maxlen=1000)  # 最多保存1000个点
+        self.trajectory_history = deque(maxlen=config.TRAJECTORY_HISTORY_SIZE)
         
-        # 速度历史（用于多窗口模式）
-        self.velocity_history = deque(maxlen=200)  # 20秒@10Hz
+        # ✅ 速度历史（用于多窗口模式，从config读取）
+        self.velocity_history = deque(maxlen=config.VELOCITY_HISTORY_SIZE)
         
-        # 位姿历史
-        self.pose_history = deque(maxlen=500)
+        # ✅ 位姿历史（从config读取）
+        self.pose_history = deque(maxlen=config.POSE_HISTORY_SIZE)
         
         # 交互回调
         self.on_click_callback: Optional[Callable] = None
@@ -591,19 +604,23 @@ class AnimatedVisualizer(MapVisualizer):
         # 更新显示
         self.update(robot_pose, lidar_points, path, frontiers, velocity)
     
-    def start(self, interval: int = 100):
+    def start(self, interval: Optional[int] = None):
         """启动动画
         
         Args:
-            interval: 刷新间隔（毫秒）
+            interval: 刷新间隔（毫秒），None则根据config.VISUALIZE_RATE自动计算
         """
+        # ✅ 从config计算刷新间隔
+        if interval is None:
+            interval = int(1000 / config.VISUALIZE_RATE)  # fps -> ms
+        
         self.animation = FuncAnimation(
             self.fig,
             self._animation_update,
             interval=interval,
             blit=False
         )
-        print(f"[可视化] 动画已启动，刷新间隔: {interval}ms")
+        print(f"[可视化] 动画已启动，刷新间隔: {interval}ms ({config.VISUALIZE_RATE}fps)")
     
     def stop(self):
         """停止动画"""

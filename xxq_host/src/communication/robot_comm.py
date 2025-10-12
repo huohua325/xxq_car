@@ -9,6 +9,7 @@ import time
 import threading
 from typing import Optional, Callable
 import logging
+import numpy as np
 
 from .protocol import (
     LidarData, MPUData, OdometryData, PoseData,
@@ -271,6 +272,19 @@ class RobotComm:
     def stop_robot(self):
         """紧急停止机器人"""
         self.send_mode_command(RobotMode.STOP)
+    
+    def reset_pose(self, x: float = 0.0, y: float = 0.0, theta: float = 0.0):
+        """重置机器人位姿
+        
+        Args:
+            x: X坐标（米），默认0
+            y: Y坐标（米），默认0
+            theta: 航向角（弧度），默认0 - 内部自动转换为度发送
+        """
+        # ✅ 转换为度（STM32接收度）
+        theta_deg = np.rad2deg(theta)
+        cmd = f"RESET,{x:.3f},{y:.3f},{theta_deg:.3f}\n"
+        self._send_command(cmd)
     
     def _send_command(self, cmd: str):
         """发送命令到串口

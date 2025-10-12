@@ -1,0 +1,73 @@
+---
+alwaysApply: true
+---
+
+# xxq智能小车项目结构
+
+这是一个基于STM32的SLAM自主导航智能小车系统，分为两个主要部分：
+
+## 项目架构
+
+### 1. **xxq/** - STM32固件端（底层硬件控制）
+- **语言**: C语言（STM32 HAL库）
+- **主文件**: [xxq/Core/Src/main.c](mdc:xxq/Core/Src/main.c)
+- **硬件驱动**: [xxq/Core/Src/hardware/](mdc:xxq/Core/Src/hardware/)
+- **功能**:
+  - 电机PID速度控制
+  - 360°激光雷达扫描
+  - MPU6500姿态传感器采集
+  - 轮速编码器测量
+  - 差分驱动位姿估计
+  - 蓝牙串口通信（UART4, 115200 baud）
+
+### 2. **xxq_host/** - Python主机端（智能决策层）
+- **语言**: Python 3.11+
+- **配置文件**: [xxq_host/config.py](mdc:xxq_host/config.py)
+- **核心模块**:
+  - `src/slam/` - SLAM建图与前沿探索
+  - `src/navigation/` - A*路径规划与DWA避障
+  - `src/communication/` - 串口/蓝牙通信协议
+  - `src/visualization/` - 实时地图可视化
+  - `src/utils/` - 工具函数
+
+## 通信协议
+
+- **接口**: UART4（蓝牙BLE HC-05）
+- **波特率**: 115200 bps
+- **上行数据**（STM32→Python）:
+  - MPU数据（50Hz，CSV格式）
+  - 里程计数据（50Hz，CSV格式）
+  - 位姿数据（20Hz，CSV格式）
+  - 雷达数据（按需，JSON格式）
+- **下行命令**（Python→STM32）:
+  - `NAV,x,y,theta,speed` - 导航控制
+  - `SPD,left,right` - 速度控制
+  - `MODE,id` - 模式切换
+  - `RESET,x,y,theta` - 位姿重置
+  - `A` - 雷达扫描请求
+
+## 关键文档
+
+### 入门文档
+- 总览: [README.md](mdc:README.md)
+- 固件说明: [xxq/README.md](mdc:xxq/README.md)
+- 主机端说明: [xxq_host/README.md](mdc:xxq_host/README.md)
+
+### 技术文档
+- 通信协议: [xxq_host/doc/硬件通信协议详细说明.md](mdc:xxq_host/doc/硬件通信协议详细说明.md)
+- 开发计划: [xxq_host/doc/plan/开发计划.md](mdc:xxq_host/doc/plan/开发计划.md)
+- DWA算法: [xxq_host/doc/description/DWA动态窗口避障算法详解.md](mdc:xxq_host/doc/description/DWA动态窗口避障算法详解.md)
+- 控制器: [xxq_host/doc/description/Controller控制器详细解析.md](mdc:xxq_host/doc/description/Controller控制器详细解析.md)
+
+## 开发原则
+
+1. **固件与主机参数同步**: 修改 [xxq_host/config.py](mdc:xxq_host/config.py) 中的 `WHEEL_BASE`, `WHEEL_RADIUS`, `ENCODER_PPR` 时，必须同步修改固件端对应参数
+2. **通信协议一致性**: 任何协议修改需要同时更新固件端和主机端代码
+3. **模块化设计**: Python端严格按模块组织，避免循环依赖
+4. **完整测试**: 修改后必须运行相关测试（`pytest tests/`）
+
+## 项目状态
+✅ 项目已完成并交付（v1.0.0）
+- 测试通过率: 53/53 (100%)
+- 代码质量: A级 (93.5分)
+- 文档完整度: 97%

@@ -117,20 +117,88 @@ WHEEL_BASE = 0.20     # 轮距（米）
 WHEEL_RADIUS = 0.033  # 轮半径（米）
 ```
 
-## 🧪 运行测试
+## 🧪 测试说明
+
+### 快速系统测试（5分钟）
+
+**验证硬件和软件是否正常工作：**
 
 ```bash
-# 激活环境
-conda activate xxq_host
+# 快速测试（推荐新手使用）
+python tests/test_system_comprehensive.py --port COM5 --quick
 
-# 运行所有测试
-pytest tests/
+# Windows示例
+python tests/test_system_comprehensive.py --port COM5 --quick
 
-# 运行特定测试
-pytest tests/test_communication.py
+# Linux示例
+python tests/test_system_comprehensive.py --port /dev/ttyUSB0 --quick
+```
+
+**测试内容：**
+- ✅ 串口连接
+- ✅ 传感器数据接收（雷达、MPU、位姿）
+- ✅ 数据质量检查
+- ✅ 控制命令发送
+- ✅ 通信延迟测试
+
+📖 **详细指南**: [快速测试指南.md](快速测试指南.md)
+
+---
+
+### 完整系统测试（20分钟）
+
+**全面测试所有功能：**
+
+```bash
+# 完整测试
+python tests/test_system_comprehensive.py --port COM5
+
+# 包括：
+# - 传感器质量测试
+# - 位姿估计精度测试
+# - 建图功能测试
+# - 可视化功能测试
+# - 完整系统运行测试
+```
+
+📊 测试报告自动保存到 `data/test_outputs/`
+
+📖 **详细指南**: [完整系统测试指南.md](doc/完整系统测试指南.md)  
+📋 **测试清单**: [测试清单.md](测试清单.md)
+
+---
+
+### 单元测试（开发使用）
+
+```bash
+# 运行所有单元测试
+pytest tests/ -v
+
+# 运行特定模块测试
+pytest tests/test_slam.py -v
+pytest tests/test_navigation.py -v
+pytest tests/test_integration.py -v
 
 # 生成覆盖率报告
 pytest --cov=src tests/
+```
+
+---
+
+### 专项测试
+
+```bash
+# 位姿估计精度测试
+python scripts/test_pose_estimation.py --port COM5 --test accuracy
+
+# 雷达数据测试
+python tests/test_system_comprehensive.py --port COM5 --test lidar
+
+# 通信延迟测试
+python tests/test_system_comprehensive.py --port COM5 --test latency
+
+# Web可视化测试
+python main_exploration.py --web
 ```
 
 ## 📚 完整文档
@@ -141,10 +209,21 @@ pytest --cov=src tests/
 - 📕 **[测试报告](doc/测试报告.md)** - 完整的测试结果
 - 📙 **[代码质量报告](doc/代码质量报告.md)** - 代码质量分析
 
+### 测试文档
+- 🚀 **[快速测试指南](快速测试指南.md)** - 5分钟快速测试
+- 📋 **[测试清单](测试清单.md)** - 可打印的测试清单
+- 📖 **[完整系统测试指南](doc/完整系统测试指南.md)** - 详细测试方案
+- 🔧 **[测试指南](doc/测试指南.md)** - 单元测试说明
+
 ### 开发文档
 - **开发计划**: `doc/开发计划.md` - 9周开发路线图
 - **技术文档**: `doc/软件组工作总结.md` - 技术方案
 - **进度报告**: `PROGRESS_REPORT.md` - 实时进度
+
+### 硬件相关
+- 🔌 **[硬件集成完整指南](doc/硬件集成完整指南.md)** - 硬件连接和配置
+- ⚙️  **[配置管理指南](doc/配置管理指南.md)** - 参数配置说明
+- 🌐 **[Web可视化使用指南](doc/Web可视化使用指南.md)** - Web界面使用
 
 ## 🔧 常见问题
 

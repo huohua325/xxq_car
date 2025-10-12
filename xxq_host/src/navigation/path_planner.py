@@ -17,7 +17,6 @@ class PathPlannerConfig:
     inflation_radius: int = 2  # 障碍物膨胀半径（格子数）
     allow_diagonal: bool = True  # 是否允许斜向移动
     diagonal_cost: float = 1.414  # 斜向移动代价（√2）
-    smoothing_max_angle: float = 30.0  # 路径平滑最大角度（度）
     smoothing_tolerance: float = 0.5  # Douglas-Peucker容差（米）
 
 

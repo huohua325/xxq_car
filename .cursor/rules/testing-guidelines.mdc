@@ -1,0 +1,355 @@
+---
+globs: **/tests/*.py,**/scripts/test_*.py
+description: Testing guidelines and best practices
+---
+
+# 测试规范与指南
+
+## 测试框架
+使用 **pytest** 作为测试框架。
+
+## 测试文件组织
+
+```
+xxq_host/tests/
+├── __init__.py
+├── test_slam.py                  # SLAM模块测试
+├── test_navigation.py            # 导航模块测试
+├── test_integration.py           # 集成测试
+├── test_frontier.py              # 前沿探索测试
+└── test_system_comprehensive.py # 完整系统测试（需要硬件）
+```
+
+## 测试命名规范
+
+### 文件命名
+- 测试文件: `test_<module>.py`
+- 测试类: `Test<FeatureName>`
+- 测试函数: `test_<specific_behavior>()`
+
+### 示例
+```python
+# tests/test_slam.py
+class TestOccupancyGridMap:
+    """测试占据栅格地图类"""
+    
+    def test_map_initialization(self):
+        """测试地图初始化"""
+        pass
+    
+    def test_lidar_update(self):
+        """测试雷达数据更新"""
+        pass
+    
+    def test_frontier_detection(self):
+        """测试前沿点检测"""
+        pass
+```
+
+## 测试分类
+
+### 1. 单元测试（无需硬件）
+测试单个函数或类的功能：
+
+```python
+# tests/test_slam.py
+def test_world_to_grid_conversion():
+    """测试世界坐标到栅格坐标的转换"""
+    from src.slam.occupancy_map import OccupancyGridMap
+    from config import MAP_RESOLUTION
+    
+    map = OccupancyGridMap(100, 100, MAP_RESOLUTION)
+    grid_x, grid_y = map.world_to_grid(1.0, 2.0)
+    
+    assert isinstance(grid_x, int)
+    assert isinstance(grid_y, int)
+    assert 0 <= grid_x < 100
+    assert 0 <= grid_y < 100
+```
+
+### 2. 集成测试（无需硬件）
+测试多个模块协同工作：
+
+```python
+# tests/test_integration.py
+def test_exploration_pipeline():
+    """测试完整的探索流程"""
+    from src.slam.occupancy_map import OccupancyGridMap
+    from src.slam.frontier_detector import FrontierDetector
+    from src.navigation.path_planner import PathPlanner
+    
+    # 创建地图
+    map = OccupancyGridMap(100, 100, 0.1)
+    
+    # 检测前沿
+    detector = FrontierDetector(map)
+    frontiers = detector.find_frontiers((0, 0))
+    
+    # 规划路径
+    if frontiers:
+        planner = PathPlanner(map)
+        path = planner.plan_path((0, 0), frontiers[0])
+        assert path is not None
+```
+
+### 3. 系统测试（需要硬件）
+测试与真实硬件的交互：
+
+```python
+# tests/test_system_comprehensive.py
+def test_hardware_communication(port='COM5'):
+    """测试硬件通信"""
+    from src.communication.robot_comm import RobotComm
+    
+    with RobotComm(port=port, baudrate=115200) as comm:
+        # 测试接收传感器数据
+        data = comm.read_sensor_data(timeout=5.0)
+        assert data is not None
+        
+        # 测试发送命令
+        comm.send_speed_command(0.0, 0.0)
+```
+
+## 运行测试
+
+### 基本命令
+```bash
+# 运行所有测试
+pytest tests/ -v
+
+# 运行特定文件
+pytest tests/test_slam.py -v
+
+# 运行特定测试
+pytest tests/test_slam.py::test_map_initialization -v
+
+# 显示print输出
+pytest tests/ -v -s
+
+# 生成覆盖率报告
+pytest --cov=src tests/
+
+# 生成HTML覆盖率报告
+pytest --cov=src --cov-report=html tests/
+```
+
+### 快速硬件测试（5分钟）
+```bash
+# Windows
+python tests/test_system_comprehensive.py --port COM5 --quick
+
+# Linux
+python tests/test_system_comprehensive.py --port /dev/ttyUSB0 --quick
+```
+
+### 完整硬件测试（20分钟）
+```bash
+python tests/test_system_comprehensive.py --port COM5
+```
+
+## 测试fixture
+
+### 配置通用fixture
+```python
+# tests/conftest.py
+import pytest
+from config import MAP_WIDTH, MAP_HEIGHT, MAP_RESOLUTION
+
+@pytest.fixture
+def occupancy_map():
+    """提供测试用占据栅格地图"""
+    from src.slam.occupancy_map import OccupancyGridMap
+    return OccupancyGridMap(MAP_WIDTH, MAP_HEIGHT, MAP_RESOLUTION)
+
+@pytest.fixture
+def sample_lidar_data():
+    """提供测试用雷达数据"""
+    import numpy as np
+    # 生成模拟雷达数据
+    angles = np.linspace(0, 2*np.pi, 360)
+    distances = np.ones(360) * 2.0  # 2米距离
+    return angles, distances
+
+# 使用fixture
+def test_with_fixture(occupancy_map, sample_lidar_data):
+    angles, distances = sample_lidar_data
+    occupancy_map.update_with_lidar(angles, distances, (0, 0, 0))
+    assert occupancy_map is not None
+```
+
+## 测试数据
+
+### 使用配置文件
+```python
+from config import WHEEL_BASE, WHEEL_RADIUS, MAP_RESOLUTION
+
+def test_odometry_calculation():
+    # 使用真实配置参数
+    distance = calculate_wheel_distance(WHEEL_BASE, 1.0, 1.0)
+    assert distance > 0
+```
+
+### Mock外部依赖
+```python
+from unittest.mock import Mock, patch
+
+def test_comm_with_mock():
+    """使用Mock测试通信模块（无需真实硬件）"""
+    mock_serial = Mock()
+    mock_serial.readline.return_value = b'POSE,1000,1.0,2.0,1.57\n'
+    
+    with patch('serial.Serial', return_value=mock_serial):
+        from src.communication.robot_comm import RobotComm
+        comm = RobotComm(port='COM99')
+        data = comm.read_pose()
+        assert data['x'] == 1.0
+```
+
+## 断言最佳实践
+
+### 明确的断言
+```python
+# ✅ 好：具体的断言
+assert result == expected_value, f"Expected {expected_value}, got {result}"
+
+# ❌ 差：模糊的断言
+assert result
+```
+
+### 浮点数比较
+```python
+import numpy as np
+
+# ✅ 使用容差比较
+assert np.isclose(actual, expected, atol=1e-6)
+
+# ❌ 直接比较（可能因浮点精度失败）
+assert actual == expected
+```
+
+### 异常测试
+```python
+import pytest
+
+def test_invalid_input():
+    """测试无效输入抛出异常"""
+    from src.slam.occupancy_map import OccupancyGridMap
+    
+    with pytest.raises(ValueError):
+        map = OccupancyGridMap(-10, 100, 0.1)  # 负数宽度应该抛出异常
+```
+
+## 测试覆盖率目标
+
+| 模块 | 覆盖率目标 |
+|-----|----------|
+| SLAM (slam/) | >85% |
+| Navigation (navigation/) | >80% |
+| Communication (communication/) | >75% |
+| Visualization (visualization/) | >70% |
+| Utils (utils/) | >90% |
+| **总体** | **>80%** |
+
+## 性能测试
+
+```python
+import time
+
+def test_path_planning_performance():
+    """测试路径规划性能"""
+    from src.navigation.path_planner import PathPlanner
+    
+    planner = PathPlanner(occupancy_map)
+    
+    start_time = time.time()
+    path = planner.plan_path((0, 0), (10, 10))
+    elapsed = time.time() - start_time
+    
+    assert path is not None
+    assert elapsed < 1.0, f"路径规划耗时{elapsed:.2f}s，超过1秒阈值"
+```
+
+## 调试测试
+
+### 使用pdb调试
+```python
+def test_with_debugging():
+    import pdb; pdb.set_trace()  # 设置断点
+    # ... 测试代码
+```
+
+### 详细日志输出
+```python
+import logging
+
+def test_with_logging(caplog):
+    """pytest自动捕获日志"""
+    caplog.set_level(logging.DEBUG)
+    
+    # ... 测试代码
+    
+    # 检查日志
+    assert "Expected log message" in caplog.text
+```
+
+## 测试文档
+
+每个测试应包含清晰的docstring：
+
+```python
+def test_frontier_clustering():
+    """
+    测试前沿点DBSCAN聚类功能。
+    
+    验证：
+    1. 能够正确识别多个前沿簇
+    2. 小于最小簇大小的前沿被过滤
+    3. 聚类中心计算正确
+    
+    测试数据：
+    - 使用3个模拟前沿簇，每个包含10个点
+    - 最小簇大小设置为5
+    
+    预期结果：
+    - 返回3个前沿簇
+    - 每个簇中心在簇点范围内
+    """
+    # 测试实现
+    pass
+```
+
+## 持续集成
+
+虽然当前项目没有配置CI，但建议添加：
+
+```yaml
+# .github/workflows/test.yml (示例)
+name: Tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - run: pytest tests/ -v --cov=src
+```
+
+## 测试清单
+
+开发新功能时的测试清单：
+- [ ] 编写单元测试覆盖核心逻辑
+- [ ] 编写集成测试验证模块协作
+- [ ] 测试边界条件和异常情况
+- [ ] 验证性能满足要求
+- [ ] 运行全部测试确保没有回归
+- [ ] 更新文档说明测试方法
+
+## 参考文档
+
+- [完整系统测试指南.md](mdc:xxq_host/doc/完整系统测试指南.md)
+- [测试报告](mdc:xxq_host/doc/plan/测试报告.md)
+- pytest官方文档: https://docs.pytest.org/

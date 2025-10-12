@@ -1,0 +1,279 @@
+---
+globs: **/communication/*.py,**/main.c
+description: Communication protocol between STM32 firmware and Python host
+---
+
+# 通信协议规范
+
+本规则适用于STM32固件端和Python主机端之间的通信模块。
+
+## 完整协议文档
+参考: [硬件通信协议详细说明.md](mdc:xxq_host/doc/硬件通信协议详细说明.md)
+
+## 通信参数
+- **接口**: UART4（硬件）/ 蓝牙BLE HC-05（无线）
+- **波特率**: 115200 bps
+- **数据位**: 8
+- **停止位**: 1
+- **校验位**: None
+- **流控**: None
+
+## 上行数据格式（STM32 → Python）
+
+### 1. MPU姿态数据（CSV格式，50Hz）
+```
+MPU,timestamp,roll,pitch,ax,ay,az,gx,gy,gz\n
+```
+**示例**: `MPU,12345,2.34,-1.56,0.123,0.045,9.765,0.12,-0.34,0.56\n`
+
+**Python解析**:
+```python
+if line.startswith('MPU,'):
+    parts = line.strip().split(',')
+    mpu_data = {
+        'timestamp': int(parts[1]),
+        'roll': float(parts[2]),      # 度
+        'pitch': float(parts[3]),     # 度
+        'ax': float(parts[4]),        # m/s²
+        'ay': float(parts[5]),        # m/s²
+        'az': float(parts[6]),        # m/s²
+        'gx': float(parts[7]),        # °/s
+        'gy': float(parts[8]),        # °/s
+        'gz': float(parts[9])         # °/s
+    }
+```
+
+### 2. 里程计数据（CSV格式，50Hz）
+```
+ODO,timestamp,left_rps,right_rps,left_count,right_count\n
+```
+**示例**: `ODO,12365,1.50,1.52,15600,7800\n`
+
+**Python解析**:
+```python
+if line.startswith('ODO,'):
+    parts = line.strip().split(',')
+    odo_data = {
+        'timestamp': int(parts[1]),
+        'left_rps': float(parts[2]),      # 转/秒
+        'right_rps': float(parts[3]),     # 转/秒
+        'left_count': int(parts[4]),      # 脉冲数
+        'right_count': int(parts[5])      # 脉冲数
+    }
+```
+
+### 3. 位姿估计数据（CSV格式，20Hz）
+```
+POSE,timestamp,x,y,theta\n
+```
+**示例**: `POSE,12415,0.125,0.345,1.57\n`
+
+**Python解析**:
+```python
+if line.startswith('POSE,'):
+    parts = line.strip().split(',')
+    pose_data = {
+        'timestamp': int(parts[1]),
+        'x': float(parts[2]),      # 米
+        'y': float(parts[3]),      # 米
+        'theta': float(parts[4])   # 弧度
+    }
+```
+
+### 4. 激光雷达数据（JSON格式，按需）
+```json
+{
+  "type": "LIDAR",
+  "timestamp": 12500,
+  "data": {
+    "total_points": 360,
+    "angle_coverage": 360.0,
+    "sectors": [
+      {
+        "sector_id": 0,
+        "angle_center": 0,
+        "count": 45,
+        "min_dist": 0.15,
+        "avg_dist": 0.87
+      }
+      // ... 共8个扇区
+    ]
+  }
+}
+```
+
+**Python解析**:
+```python
+import json
+
+if line.strip().startswith('{'):
+    lidar_data = json.loads(line)
+    if lidar_data.get('type') == 'LIDAR':
+        sectors = lidar_data['data']['sectors']
+        # 处理8个扇区数据
+```
+
+## 下行命令格式（Python → STM32）
+
+### 1. 导航控制命令
+```python
+# Python发送
+def send_nav_command(x: float, y: float, theta: float, speed: float):
+    command = f"NAV,{x:.3f},{y:.3f},{theta:.2f},{speed:.2f}\n"
+    serial_port.write(command.encode())
+```
+
+**格式**: `NAV,x,y,theta,speed\n`
+**示例**: `NAV,1.500,2.000,90.00,1.50\n`
+
+**STM32处理**:
+```c
+if (strncmp(rx_buffer, "NAV", 3) == 0) {
+    float x, y, theta, speed;
+    sscanf(rx_buffer, "NAV,%f,%f,%f,%f", &x, &y, &theta, &speed);
+    // 启用差分驱动控制器导航到目标
+}
+```
+
+### 2. 速度控制命令
+```python
+# Python发送
+def send_speed_command(left_speed: float, right_speed: float):
+    command = f"SPD,{left_speed:.2f},{right_speed:.2f}\n"
+    serial_port.write(command.encode())
+```
+
+**格式**: `SPD,left_speed,right_speed\n`
+**示例**: `SPD,1.50,1.50\n`
+
+### 3. 模式控制命令
+```python
+# Python发送
+def send_mode_command(mode_id: int):
+    command = f"MODE,{mode_id}\n"
+    serial_port.write(command.encode())
+```
+
+**格式**: `MODE,mode_id\n`
+**模式ID**:
+- 0 = 停止
+- 1 = PID前进
+- 2 = PID后退
+- 3 = 左转
+- 4 = 右转
+- 5 = 自动导航
+
+### 4. 雷达扫描请求
+```python
+# Python发送
+def request_lidar_scan():
+    serial_port.write(b'A')
+```
+
+**格式**: `A`（单字符，无换行）
+
+### 5. 位姿重置命令
+```python
+# Python发送
+def reset_pose(x: float, y: float, theta: float):
+    command = f"RESET,{x:.3f},{y:.3f},{theta:.3f}\n"
+    serial_port.write(command.encode())
+```
+
+**格式**: `RESET,x,y,theta\n`
+**示例**: `RESET,0.000,0.000,0.000\n`
+
+## 关键实现文件
+
+### Python端
+- **RobotComm**: [xxq_host/src/communication/robot_comm.py](mdc:xxq_host/src/communication/robot_comm.py)
+- **RobotCommBLE**: [xxq_host/src/communication/robot_comm_ble.py](mdc:xxq_host/src/communication/robot_comm_ble.py)
+- **Protocol**: [xxq_host/src/communication/protocol.py](mdc:xxq_host/src/communication/protocol.py)
+
+### STM32端
+- **通信处理**: [xxq/Core/Src/main.c](mdc:xxq/Core/Src/main.c) (主循环和命令解析)
+
+## 数据流量估算
+
+| 数据类型 | 频率 | 单包大小 | 每秒数据量 |
+|---------|------|---------|-----------|
+| MPU | 50Hz | ~70字节 | ~3.5 KB/s |
+| 里程计 | 50Hz | ~50字节 | ~2.5 KB/s |
+| 位姿 | 20Hz | ~35字节 | ~0.7 KB/s |
+| **总计** | - | - | **~6.7 KB/s** |
+
+雷达数据按需发送，单次约2KB。
+
+## 错误处理
+
+### Python端
+```python
+try:
+    data = comm.read_sensor_data()
+except serial.SerialTimeoutException:
+    logger.warning("串口读取超时")
+except json.JSONDecodeError:
+    logger.error("JSON解析失败")
+except ValueError as e:
+    logger.error(f"数据格式错误: {e}")
+```
+
+### STM32端
+```c
+// 命令缓冲区溢出保护
+if (rx_index >= RX_BUFFER_SIZE - 1) {
+    rx_index = 0;
+    printf("ERROR: RX buffer overflow\n");
+}
+
+// 无效命令处理
+if (parse_result != 0) {
+    printf("ERROR: Invalid command format\n");
+}
+```
+
+## 调试技巧
+
+### 1. 查看原始数据
+```bash
+# Windows
+mode COM5: BAUD=115200 PARITY=N DATA=8 STOP=1
+type COM5
+
+# Linux
+screen /dev/ttyUSB0 115200
+# 或
+minicom -D /dev/ttyUSB0 -b 115200
+```
+
+### 2. Python端调试
+```python
+# 启用详细日志
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
+# 打印原始数据
+print(f"Received: {line.strip()}")
+```
+
+### 3. 通信测试
+```bash
+# 运行快速系统测试
+python tests/test_system_comprehensive.py --port COM5 --quick
+```
+
+## 协议修改流程
+
+如需修改通信协议：
+1. ✅ 更新 [硬件通信协议详细说明.md](mdc:xxq_host/doc/硬件通信协议详细说明.md)
+2. ✅ 修改STM32固件 [main.c](mdc:xxq/Core/Src/main.c)
+3. ✅ 修改Python通信模块 [robot_comm.py](mdc:xxq_host/src/communication/robot_comm.py)
+4. ✅ 更新本规则文件
+5. ✅ 运行通信测试验证
+
+## 性能优化建议
+
+1. **降低发送频率**: 如果数据量过大，可降低MPU和ODO频率到20Hz
+2. **数据压缩**: 可使用二进制协议替代文本协议（需要大量修改）
+3. **缓冲区优化**: 增加STM32端DMA缓冲区大小
+4. **异步处理**: Python端使用多线程接收数据

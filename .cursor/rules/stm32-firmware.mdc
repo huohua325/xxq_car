@@ -1,0 +1,210 @@
+---
+globs: *.c,*.h
+---
+
+# STM32固件开发规范（xxq）
+
+## 代码风格
+
+### 1. 命名规范
+- 函数使用 `snake_case`: `read_mpu_data()`, `send_lidar_json()`
+- 全局变量使用 `snake_case`: `target_speed_left`, `encoder_count_right`
+- 宏定义使用 `UPPER_CASE`: `WHEEL_BASE`, `ENCODER_PPR_LEFT`
+- 类型定义使用 `PascalCase_t`: `RobotPose_t`, `EncoderData_t`
+
+### 2. 注释规范
+```c
+/**
+ * @brief 读取MPU6500姿态数据
+ * @param None
+ * @retval 0=成功, -1=失败
+ */
+int read_mpu_data(void) {
+    // 实现代码
+}
+```
+
+### 3. 文件组织
+- **main.c**: 主程序和通信协议实现
+- **hardware/*.c**: 硬件驱动（雷达、MPU、编码器、电机等）
+- **gpio.c, i2c.c, spi.c, usart.c**: STM32 HAL外设配置
+
+## 关键模块
+
+### 1. 通信协议 (main.c)
+参考: [硬件通信协议详细说明.md](mdc:xxq_host/doc/硬件通信协议详细说明.md)
+
+**发送数据格式**:
+```c
+// MPU数据（50Hz）
+printf("MPU,%lu,%.2f,%.2f,%.3f,%.3f,%.3f,%.2f,%.2f,%.2f\n", 
+       timestamp, roll, pitch, ax, ay, az, gx, gy, gz);
+
+// 里程计数据（50Hz）
+printf("ODO,%lu,%.2f,%.2f,%ld,%ld\n", 
+       timestamp, left_rps, right_rps, left_count, right_count);
+
+// 位姿数据（20Hz）
+printf("POSE,%lu,%.3f,%.3f,%.2f\n", 
+       timestamp, x, y, theta);
+```
+
+**接收命令解析**:
+```c
+// 导航命令: NAV,x,y,theta,speed
+if (strncmp(rx_buffer, "NAV", 3) == 0) {
+    float x, y, theta, speed;
+    sscanf(rx_buffer, "NAV,%f,%f,%f,%f", &x, &y, &theta, &speed);
+    // 处理逻辑
+}
+```
+
+### 2. 硬件驱动规范
+
+**雷达驱动** (`hardware/lidar.c`):
+```c
+// 扫描数据使用JSON格式发送
+void send_lidar_json(void);
+```
+
+**编码器驱动** (`hardware/encoder.c`):
+```c
+// 左轮: TIM3
+// 右轮: TIM4
+// 定时器配置为编码器模式
+```
+
+**MPU6500驱动** (`hardware/mpu6500.c`):
+```c
+// I2C通信（I2C1）
+// 融合加速度计和陀螺仪数据
+```
+
+**电机驱动** (`hardware/motor.c`):
+```c
+// PWM控制（TIM1）
+// 方向控制（GPIO）
+// PID速度闭环
+```
+
+### 3. 差分驱动位姿估计 (`hardware/differential_drive.c`)
+```c
+typedef struct {
+    float x;              // X坐标（米）
+    float y;              // Y坐标（米）
+    float theta;          // 航向角（弧度）
+    uint32_t timestamp;   // 时间戳（ms）
+} RobotPose_t;
+
+// 位姿更新（融合里程计+IMU）
+void pose_estimator_update(float left_rps, float right_rps, float gyro_z);
+
+// 位姿重置
+void pose_estimator_reset(float x, float y, float theta);
+```
+
+## 关键参数配置
+
+### 机器人物理参数（main.c约318-320行）
+```c
+#define WHEEL_BASE      0.20f    // 轮距（米）
+#define WHEEL_RADIUS    0.033f   // 轮半径（米）
+#define ENCODER_PPR_LEFT  1560   // 左轮编码器分辨率
+#define ENCODER_PPR_RIGHT 780    // 右轮编码器分辨率
+```
+
+⚠️ **重要**: 修改这些参数时，必须同步修改 [config.py](mdc:xxq_host/config.py) 中的对应参数！
+
+### PID参数
+```c
+// 速度PID控制器
+typedef struct {
+    float kp;     // 比例系数
+    float ki;     // 积分系数
+    float kd;     // 微分系数
+} PID_t;
+```
+
+## 调试命令
+
+固件支持串口调试命令（115200 baud）：
+
+| 命令 | 功能 |
+|-----|------|
+| `?` | 显示帮助信息 |
+| `1` | PID前进（1.5 RPS） |
+| `0` | 紧急停止 |
+| `2` | 左转（50% PWM） |
+| `3` | 右转（50% PWM） |
+| `4` | PID后退 |
+| `5` | 查看当前速度 |
+| `A` | 激光雷达扫描 |
+| `M` | 读取MPU数据 |
+| `E` | 编码器测试 |
+| `S` | I2C设备扫描 |
+
+## 开发注意事项
+
+### 1. 定时器使用
+- **TIM1**: PWM输出（电机控制）
+- **TIM2**: 编码器A相（备用）
+- **TIM3**: 左轮编码器
+- **TIM4**: 右轮编码器
+- **TIM5**: 系统定时器（1ms中断）
+
+### 2. 通信接口
+- **UART4**: 主通信（蓝牙/USB串口）
+- **I2C1**: MPU6500传感器
+- **SPI1**: 预留（可用于扩展）
+
+### 3. 中断优先级
+```c
+// 高优先级（0-2）：编码器、定时器
+// 中优先级（3-5）：UART接收
+// 低优先级（6-15）：其他外设
+```
+
+### 4. 缓冲区管理
+```c
+#define RX_BUFFER_SIZE 256
+char rx_buffer[RX_BUFFER_SIZE];
+volatile uint8_t rx_index = 0;
+
+// 使用循环缓冲区避免溢出
+```
+
+## 测试与调试
+
+### 1. 硬件测试步骤
+1. 编码器测试: 发送 `E` 命令
+2. MPU测试: 发送 `M` 命令
+3. 雷达测试: 发送 `A` 命令
+4. 电机测试: 发送 `1` 命令（前进）
+5. 通信测试: 运行Python端快速测试
+
+### 2. 常见问题
+- **编码器计数异常**: 检查定时器配置和信号连接
+- **MPU数据不更新**: 检查I2C地址和连接
+- **电机不转**: 检查PWM频率和GPIO配置
+- **通信丢包**: 降低数据发送频率或增加缓冲区
+
+### 3. 调试工具
+- **STM32CubeIDE**: 在线调试、断点、变量监视
+- **串口助手**: 查看原始通信数据
+- **逻辑分析仪**: 分析时序信号（可选）
+
+## 固件烧录
+
+```bash
+# 使用STM32CubeIDE
+# 或使用ST-Link Utility
+# 或使用命令行（OpenOCD/st-flash）
+```
+
+## 参考文档
+
+- STM32F446 数据手册
+- HAL库用户手册
+- [硬件连接方案.md](mdc:xxq/docs/硬件连接方案.md)
+- [MPU6500使用方案.md](mdc:xxq/docs/MPU6500使用方案.md)
+- [激光雷达使用方案.md](mdc:xxq/docs/激光雷达使用方案.md)

@@ -1,171 +1,90 @@
-00:56:17 **** Incremental Build of configuration Debug for project xxq ****
+09:46:33 **** Incremental Build of configuration Debug for project xxq ****
 make -j16 all 
-arm-none-eabi-gcc "../Core/Src/hardware/Encoder.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DUSE_HAL_DRIVER -DSTM32F446xx -DDEBUG -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/hardware/Encoder.d" -MT"Core/Src/hardware/Encoder.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/hardware/Encoder.o"
-arm-none-eabi-gcc "../Core/Src/hardware/Motor.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DUSE_HAL_DRIVER -DSTM32F446xx -DDEBUG -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/hardware/Motor.d" -MT"Core/Src/hardware/Motor.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/hardware/Motor.o"
-arm-none-eabi-gcc "../Core/Src/hardware/mpu6500.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DUSE_HAL_DRIVER -DSTM32F446xx -DDEBUG -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/hardware/mpu6500.d" -MT"Core/Src/hardware/mpu6500.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/hardware/mpu6500.o"
-arm-none-eabi-gcc "../Core/Src/hardware/pid.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DUSE_HAL_DRIVER -DSTM32F446xx -DDEBUG -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/hardware/pid.d" -MT"Core/Src/hardware/pid.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/hardware/pid.o"
 arm-none-eabi-gcc "../Core/Src/hardware/radar.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DUSE_HAL_DRIVER -DSTM32F446xx -DDEBUG -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/hardware/radar.d" -MT"Core/Src/hardware/radar.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/hardware/radar.o"
-arm-none-eabi-gcc "../Core/Src/gpio.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DUSE_HAL_DRIVER -DSTM32F446xx -DDEBUG -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/gpio.d" -MT"Core/Src/gpio.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/gpio.o"
-arm-none-eabi-gcc "../Core/Src/i2c.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DUSE_HAL_DRIVER -DSTM32F446xx -DDEBUG -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/i2c.d" -MT"Core/Src/i2c.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/i2c.o"
 arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DUSE_HAL_DRIVER -DSTM32F446xx -DDEBUG -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
-arm-none-eabi-gcc "../Core/Src/spi.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DUSE_HAL_DRIVER -DSTM32F446xx -DDEBUG -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/spi.d" -MT"Core/Src/spi.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/spi.o"
-arm-none-eabi-gcc "../Core/Src/stm32f4xx_hal_msp.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DUSE_HAL_DRIVER -DSTM32F446xx -DDEBUG -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/stm32f4xx_hal_msp.d" -MT"Core/Src/stm32f4xx_hal_msp.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/stm32f4xx_hal_msp.o"
-arm-none-eabi-gcc "../Core/Src/stm32f4xx_it.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DUSE_HAL_DRIVER -DSTM32F446xx -DDEBUG -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/stm32f4xx_it.d" -MT"Core/Src/stm32f4xx_it.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/stm32f4xx_it.o"
-arm-none-eabi-gcc "../Core/Src/tim.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DUSE_HAL_DRIVER -DSTM32F446xx -DDEBUG -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/tim.d" -MT"Core/Src/tim.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/tim.o"
 arm-none-eabi-gcc "../Core/Src/usart.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DUSE_HAL_DRIVER -DSTM32F446xx -DDEBUG -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/usart.d" -MT"Core/Src/usart.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/usart.o"
-../Core/Src/hardware/Motor.c: In function 'Motor_PID_Control':
-../Core/Src/hardware/Motor.c:601:53: warning: implicit declaration of function 'strlen' [-Wimplicit-function-declaration]
-  601 |         HAL_UART_Transmit(&huart4, (uint8_t*)debug, strlen(debug), 100);
-      |                                                     ^~~~~~
-../Core/Src/hardware/Motor.c:8:1: note: include '<string.h>' or provide a declaration of 'strlen'
-    7 | #include "encoder.h"
-  +++ |+#include <string.h>
-    8 | 
-../Core/Src/hardware/Motor.c:601:53: warning: incompatible implicit declaration of built-in function 'strlen' [-Wbuiltin-declaration-mismatch]
-  601 |         HAL_UART_Transmit(&huart4, (uint8_t*)debug, strlen(debug), 100);
-      |                                                     ^~~~~~
-../Core/Src/hardware/Motor.c:601:53: note: include '<string.h>' or provide a declaration of 'strlen'
-../Core/Src/hardware/Motor.c: In function 'Motor_EncoderSingleTest':
-../Core/Src/hardware/Motor.c:752:47: warning: incompatible implicit declaration of built-in function 'strlen' [-Wbuiltin-declaration-mismatch]
-  752 |     HAL_UART_Transmit(&huart4, (uint8_t*)msg, strlen(msg), 100);
-      |                                               ^~~~~~
-../Core/Src/hardware/Motor.c:752:47: note: include '<string.h>' or provide a declaration of 'strlen'
-../Core/Src/hardware/Motor.c: In function 'Motor_EncoderDiagnosticTest':
-../Core/Src/hardware/Motor.c:833:47: warning: incompatible implicit declaration of built-in function 'strlen' [-Wbuiltin-declaration-mismatch]
-  833 |     HAL_UART_Transmit(&huart4, (uint8_t*)msg, strlen(msg), 100);
-      |                                               ^~~~~~
-../Core/Src/hardware/Motor.c:833:47: note: include '<string.h>' or provide a declaration of 'strlen'
-../Core/Src/hardware/Motor.c: In function 'Motor_EncoderFullTest':
-../Core/Src/hardware/Motor.c:910:47: warning: incompatible implicit declaration of built-in function 'strlen' [-Wbuiltin-declaration-mismatch]
-  910 |     HAL_UART_Transmit(&huart4, (uint8_t*)msg, strlen(msg), 100);
-      |                                               ^~~~~~
-../Core/Src/hardware/Motor.c:910:47: note: include '<string.h>' or provide a declaration of 'strlen'
-../Core/Src/hardware/Motor.c: In function 'Motor_PWM_Calibration':
-../Core/Src/hardware/Motor.c:957:47: warning: incompatible implicit declaration of built-in function 'strlen' [-Wbuiltin-declaration-mismatch]
-  957 |     HAL_UART_Transmit(&huart4, (uint8_t*)msg, strlen(msg), 100);
-      |                                               ^~~~~~
-../Core/Src/hardware/Motor.c:957:47: note: include '<string.h>' or provide a declaration of 'strlen'
-../Core/Src/hardware/Motor.c: In function 'Motor_EncoderQuickCheck':
-../Core/Src/hardware/Motor.c:1055:47: warning: incompatible implicit declaration of built-in function 'strlen' [-Wbuiltin-declaration-mismatch]
- 1055 |     HAL_UART_Transmit(&huart4, (uint8_t*)msg, strlen(msg), 100);
-      |                                               ^~~~~~
-../Core/Src/hardware/Motor.c:1055:47: note: include '<string.h>' or provide a declaration of 'strlen'
-../Core/Src/hardware/mpu6500.c: In function 'MPU6500_DisplayUserFriendlyData':
-../Core/Src/hardware/mpu6500.c:447:5: warning: implicit declaration of function 'snprintf' [-Wimplicit-function-declaration]
-  447 |     snprintf(output_buffer, sizeof(output_buffer),
-      |     ^~~~~~~~
-../Core/Src/hardware/mpu6500.c:11:1: note: include '<stdio.h>' or provide a declaration of 'snprintf'
-   10 | #include <string.h>
-  +++ |+#include <stdio.h>
-   11 | 
-../Core/Src/hardware/mpu6500.c:447:5: warning: incompatible implicit declaration of built-in function 'snprintf' [-Wbuiltin-declaration-mismatch]
-  447 |     snprintf(output_buffer, sizeof(output_buffer),
-      |     ^~~~~~~~
-../Core/Src/hardware/mpu6500.c:447:5: note: include '<stdio.h>' or provide a declaration of 'snprintf'
-../Core/Src/tim.c: In function 'MX_TIM3_Init':
-../Core/Src/tim.c:138:29: warning: unused variable 'sMasterConfig' [-Wunused-variable]
-  138 |     TIM_MasterConfigTypeDef sMasterConfig = {0};
-      |                             ^~~~~~~~~~~~~
+../Core/Src/hardware/radar.c: In function 'Radar_Scanner_Start':
+../Core/Src/hardware/radar.c:682:23: warning: unused variable 'start_status' [-Wunused-variable]
+  682 |     HAL_StatusTypeDef start_status = Radar_StartScan(scanner->huart_radar);
+      |                       ^~~~~~~~~~~~
+../Core/Src/hardware/radar.c:679:14: warning: unused variable 'cleared' [-Wunused-variable]
+  679 |     uint32_t cleared = Radar_ClearReceiveBuffer(scanner->huart_radar);
+      |              ^~~~~~~
 ../Core/Src/main.c: In function 'main':
-../Core/Src/main.c:236:16: warning: unused variable 'mpu_raw_data' [-Wunused-variable]
-  236 |   MPU6500_Data mpu_raw_data;           // MPU6500原始数据
-      |                ^~~~~~~~~~~~
-../Core/Src/main.c:233:9: warning: unused variable 'delta_time' [-Wunused-variable]
-  233 |   float delta_time = 0.0f;             // 时间间隔 (秒)
-      |         ^~~~~~~~~~
-../Core/Src/main.c:232:12: warning: unused variable 'current_time' [-Wunused-variable]
-  232 |   uint32_t current_time = 0;           // 当前系统时间戳
-      |            ^~~~~~~~~~~~
-../Core/Src/main.c:231:12: warning: unused variable 'last_control_time' [-Wunused-variable]
-  231 |   uint32_t last_control_time = 0;      // 上次控制循环时间戳
-      |            ^~~~~~~~~~~~~~~~~
-../Core/Src/main.c:228:9: warning: unused variable 'current_speed_right' [-Wunused-variable]
-  228 |   float current_speed_right = 0.0f;    // 当前右轮速度 (RPS)
-      |         ^~~~~~~~~~~~~~~~~~~
-../Core/Src/main.c:227:9: warning: unused variable 'current_speed_left' [-Wunused-variable]
-  227 |   float current_speed_left = 0.0f;     // 当前左轮速度 (RPS)
-      |         ^~~~~~~~~~~~~~~~~~
+../Core/Src/main.c:524:19: warning: implicit declaration of function 'Send_Lidar_JSON' [-Wimplicit-function-declaration]
+  524 |                   Send_Lidar_JSON(&huart4, &scan_result);
+      |                   ^~~~~~~~~~~~~~~
+../Core/Src/main.c:446:23: warning: unused variable 'last_pose_time' [-Wunused-variable]
+  446 |       static uint32_t last_pose_time = 0;
+      |                       ^~~~~~~~~~~~~~
+../Core/Src/main.c:445:23: warning: unused variable 'last_odom_time' [-Wunused-variable]
+  445 |       static uint32_t last_odom_time = 0;
+      |                       ^~~~~~~~~~~~~~
+../Core/Src/main.c: At top level:
+../Core/Src/main.c:1329:6: warning: conflicting types for 'Send_Lidar_JSON'; have 'void(UART_HandleTypeDef *, RadarScanResult *)' {aka 'void(struct __UART_HandleTypeDef *, RadarScanResult *)'}
+ 1329 | void Send_Lidar_JSON(UART_HandleTypeDef *huart, RadarScanResult *result) {
+      |      ^~~~~~~~~~~~~~~
+../Core/Src/main.c:524:19: note: previous implicit declaration of 'Send_Lidar_JSON' with type 'void(UART_HandleTypeDef *, RadarScanResult *)' {aka 'void(struct __UART_HandleTypeDef *, RadarScanResult *)'}
+  524 |                   Send_Lidar_JSON(&huart4, &scan_result);
+      |                   ^~~~~~~~~~~~~~~
 ../Core/Src/main.c: In function 'Command_ProcessUserInput':
-../Core/Src/main.c:592:30: warning: implicit declaration of function 'fabs' [-Wimplicit-function-declaration]
-  592 |                             (fabs(roll) < 10) ? "(Good)" : (fabs(roll) > 45) ? "(WRONG ORIENTATION!)" : "(Tilted)",
-      |                              ^~~~
-../Core/Src/main.c:57:1: note: include '<math.h>' or provide a declaration of 'fabs'
-   56 | #include "hardware/radar.h"
-  +++ |+#include <math.h>
-   57 | 
-../Core/Src/main.c:592:30: warning: incompatible implicit declaration of built-in function 'fabs' [-Wbuiltin-declaration-mismatch]
-  592 |                             (fabs(roll) < 10) ? "(Good)" : (fabs(roll) > 45) ? "(WRONG ORIENTATION!)" : "(Tilted)",
-      |                              ^~~~
-../Core/Src/main.c:592:30: note: include '<math.h>' or provide a declaration of 'fabs'
-../Core/Src/main.c:595:29: warning: implicit declaration of function 'sqrtf' [-Wimplicit-function-declaration]
-  595 |                             sqrtf(calib_data.Accel_X*calib_data.Accel_X + calib_data.Accel_Y*calib_data.Accel_Y + calib_data.Accel_Z*calib_data.Accel_Z) * 9.80665f / 16384.0f,
-      |                             ^~~~~
-../Core/Src/main.c:595:29: note: include '<math.h>' or provide a declaration of 'sqrtf'
-../Core/Src/main.c:595:29: warning: incompatible implicit declaration of built-in function 'sqrtf' [-Wbuiltin-declaration-mismatch]
-../Core/Src/main.c:595:29: note: include '<math.h>' or provide a declaration of 'sqrtf'
-../Core/Src/main.c:784:28: warning: unused variable 'init_msg' [-Wunused-variable]
-  784 |                       char init_msg[100];
-      |                            ^~~~~~~~
-../Core/Src/main.c:579:29: warning: ' deg/s (Normal ~0 when stati...' directive output truncated writing 173 bytes into a region of size 97 [-Wformat-truncation=]
-  579 |                             "\r\n+==================== MPU6500 DATA ANALYSIS ====================+\r\n"
+../Core/Src/main.c:803:29: warning: '
++=========================...' directive output truncated writing 68 bytes into a region of size 41 [-Wformat-truncation=]
+  803 |                             "\r\n+==================== MPU6500 DATA ANALYSIS ====================+\r\n"
       |                             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-../Core/Src/main.c:587:86: note: format string is defined here
-  586 |                             "|   Gyro Total:  %5.2f deg/s (Normal ~0 when static)        |\r\n"
-      |                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  587 |                             "|                                                            |\r\n"
-      |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~
-  588 |                             "| INSTALLATION CHECK:                                        |\r\n"
-      |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  589 |                             "|   %s\r\n"
-      |                             ~~~~~                                                     
-../Core/Src/main.c:578:21: note: 'snprintf' output 678 or more bytes into a destination of size 500
-  578 |                     snprintf(analysis, sizeof(analysis),
+../Core/Src/main.c:814:69: note: format string is defined here
+  813 |                             "|   %s\r\n"
+      |                                    ~~~~~                             
+  814 |                             "+============================================================+\r\n\r\n",
+      |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+../Core/Src/main.c:802:21: note: 'snprintf' output 678 or more bytes into a destination of size 650
+  802 |                     snprintf(analysis, sizeof(analysis),
       |                     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  579 |                             "\r\n+==================== MPU6500 DATA ANALYSIS ====================+\r\n"
+  803 |                             "\r\n+==================== MPU6500 DATA ANALYSIS ====================+\r\n"
       |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  580 |                             "| SENSOR ORIENTATION ANALYSIS:                               |\r\n"
+  804 |                             "| SENSOR ORIENTATION ANALYSIS:                               |\r\n"
       |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  581 |                             "|   Roll:  %6.1f° %s\r\n"
+  805 |                             "|   Roll:  %6.1f° %s\r\n"
       |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~
-  582 |                             "|   Pitch: %6.1f° %s\r\n"
+  806 |                             "|   Pitch: %6.1f° %s\r\n"
       |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~
-  583 |                             "|                                                            |\r\n"
+  807 |                             "|                                                            |\r\n"
       |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  584 |                             "| MOTION ANALYSIS:                                           |\r\n"
+  808 |                             "| MOTION ANALYSIS:                                           |\r\n"
       |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  585 |                             "|   Accel Total: %5.2f m/s² (Normal ~9.8 when static)       |\r\n"
+  809 |                             "|   Accel Total: %5.2f m/s² (Normal ~9.8 when static)       |\r\n"
       |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  586 |                             "|   Gyro Total:  %5.2f deg/s (Normal ~0 when static)        |\r\n"
+  810 |                             "|   Gyro Total:  %5.2f deg/s (Normal ~0 when static)        |\r\n"
       |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  587 |                             "|                                                            |\r\n"
+  811 |                             "|                                                            |\r\n"
       |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  588 |                             "| INSTALLATION CHECK:                                        |\r\n"
+  812 |                             "| INSTALLATION CHECK:                                        |\r\n"
       |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  589 |                             "|   %s\r\n"
+  813 |                             "|   %s\r\n"
       |                             ~~~~~~~~~~~~
-  590 |                             "+============================================================+\r\n\r\n",
+  814 |                             "+============================================================+\r\n\r\n",
       |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  591 |                             roll,
+  815 |                             roll,
       |                             ~~~~~
-  592 |                             (fabs(roll) < 10) ? "(Good)" : (fabs(roll) > 45) ? "(WRONG ORIENTATION!)" : "(Tilted)",
+  816 |                             (fabs(roll) < 10) ? "(Good)" : (fabs(roll) > 45) ? "(WRONG ORIENTATION!)" : "(Tilted)",
       |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  593 |                             pitch,
+  817 |                             pitch,
       |                             ~~~~~~
-  594 |                             (fabs(pitch) < 10) ? "(Good)" : (fabs(pitch) > 45) ? "(WRONG ORIENTATION!)" : "(Tilted)",
+  818 |                             (fabs(pitch) < 10) ? "(Good)" : (fabs(pitch) > 45) ? "(WRONG ORIENTATION!)" : "(Tilted)",
       |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  595 |                             sqrtf(calib_data.Accel_X*calib_data.Accel_X + calib_data.Accel_Y*calib_data.Accel_Y + calib_data.Accel_Z*calib_data.Accel_Z) * 9.80665f / 16384.0f,
+  819 |                             sqrtf(calib_data.Accel_X*calib_data.Accel_X + calib_data.Accel_Y*calib_data.Accel_Y + calib_data.Accel_Z*calib_data.Accel_Z) * 9.80665f / 16384.0f,
       |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  596 |                             sqrtf(calib_data.Gyro_X*calib_data.Gyro_X + calib_data.Gyro_Y*calib_data.Gyro_Y + calib_data.Gyro_Z*calib_data.Gyro_Z) / 131.0f,
+  820 |                             sqrtf(calib_data.Gyro_X*calib_data.Gyro_X + calib_data.Gyro_Y*calib_data.Gyro_Y + calib_data.Gyro_Z*calib_data.Gyro_Z) / 131.0f,
       |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  597 |                             (fabs(roll) > 45 || fabs(pitch) > 45) ?
+  821 |                             (fabs(roll) > 45 || fabs(pitch) > 45) ?
       |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  598 |                             "WARNING: Sensor appears incorrectly mounted!" :
+  822 |                             "WARNING: Sensor appears incorrectly mounted!" :
       |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  599 |                             (fabs(roll) < 5 && fabs(pitch) < 5) ?
+  823 |                             (fabs(roll) < 5 && fabs(pitch) < 5) ?
       |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  600 |                             "GOOD: Sensor is properly oriented" :
+  824 |                             "GOOD: Sensor is properly oriented" :
       |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  601 |                             "OK: Sensor slightly tilted but acceptable");
+  825 |                             "OK: Sensor slightly tilted but acceptable");
       |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 arm-none-eabi-gcc -o "xxq.elf" @"objects.list"   -mcpu=cortex-m4 -T"D:\Programs\STM32CubeIDE\workspace\xxq\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="xxq.map" -Wl,--gc-sections -static -u _printf_float --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 D:/Programs/STM32CubeIDE/STM32CubeIDE_1.19.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.win32_1.0.0.202411081344/tools/bin/../lib/gcc/arm-none-eabi/13.3.1/../../../../arm-none-eabi/bin/ld.exe: warning: xxq.elf has a LOAD segment with RWX permissions
@@ -174,11 +93,11 @@ Finished building target: xxq.elf
 arm-none-eabi-size  xxq.elf 
 arm-none-eabi-objdump -h -S xxq.elf  > "xxq.list"
    text	   data	    bss	    dec	    hex	filename
-  75668	    512	   3064	  79244	  1358c	xxq.elf
+  87464	    512	   3640	  91616	  165e0	xxq.elf
 Finished building: default.size.stdout
  
 Finished building: xxq.list
  
 
-00:56:18 Build Finished. 0 errors, 23 warnings. (took 1s.178ms)
+09:46:34 Build Finished. 0 errors, 8 warnings. (took 979ms)
 

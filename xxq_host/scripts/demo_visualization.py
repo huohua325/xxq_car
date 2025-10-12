@@ -11,19 +11,20 @@ import numpy as np
 import matplotlib.pyplot as plt
 from src.slam.occupancy_map import OccupancyGridMap, MapConfig
 from src.visualization.map_visualizer import MapVisualizer
+import config
 import time
 
 
 def create_test_map():
     """创建测试地图"""
-    config = MapConfig(
+    map_config = MapConfig(
         width=500,
         height=500,
         resolution=0.1,
         origin_x=250,
         origin_y=250
     )
-    map_obj = OccupancyGridMap(config)
+    map_obj = OccupancyGridMap(map_config)
     
     # 模拟一个方形房间（5m x 5m）
     print("[演示] 创建测试环境...")
@@ -95,8 +96,8 @@ def demo_basic_visualization():
     
     map_obj, obstacles = create_test_map()
     
-    # 创建可视化器
-    visualizer = MapVisualizer(map_obj, figsize=(12, 10))
+    # ✅ 创建可视化器（使用config参数）
+    visualizer = MapVisualizer(map_obj)
     
     # 机器人位姿
     robot_pose = (0.0, 0.0, np.deg2rad(45))
@@ -148,8 +149,8 @@ def demo_trajectory_animation():
     
     map_obj, obstacles = create_test_map()
     
-    # 创建可视化器
-    visualizer = MapVisualizer(map_obj, figsize=(12, 10))
+    # ✅ 创建可视化器（使用config参数）
+    visualizer = MapVisualizer(map_obj)
     
     # 模拟机器人沿圆形轨迹运动
     print("[演示] 开始轨迹动画...")
@@ -195,7 +196,7 @@ def demo_multi_window():
     
     map_obj, obstacles = create_test_map()
     
-    # 创建多窗口可视化器
+    # ✅ 创建多窗口可视化器（使用config参数，但演示时临时覆盖）
     visualizer = MapVisualizer(map_obj, figsize=(15, 12), enable_multi_window=True)
     
     print("[演示] 多窗口布局创建完成")

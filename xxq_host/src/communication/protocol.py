@@ -123,6 +123,8 @@ class CommandType:
     SPEED = "SPD"       # 速度控制
     MODE = "MODE"       # 模式控制
     LIDAR_SCAN = "A"    # 请求雷达扫描
+    REQUEST_LIDAR = "A" # 请求雷达扫描（别名）
+    RESET_POSE = "RESET_POSE"  # 重置位姿
 
 
 class RobotMode:

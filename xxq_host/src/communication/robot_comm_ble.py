@@ -66,6 +66,9 @@ class RobotCommBLE:
         self.on_odom_update: Optional[Callable[[OdometryData], None]] = None
         self.on_pose_update: Optional[Callable[[PoseData], None]] = None
         
+        # 阶段1新增：通用消息回调（用于接收STM32的ACK、调试信息等）
+        self.on_message: Optional[Callable[[str], None]] = None
+        
         # 日志
         self.logger = logging.getLogger(__name__)
     
@@ -218,8 +221,12 @@ class RobotCommBLE:
             if line.startswith('{'):
                 self._parse_json(line)
             # CSV格式（MPU/ODO/POSE）
-            else:
+            elif line.startswith('MPU,') or line.startswith('ODO,') or line.startswith('POSE,'):
                 self._parse_csv(line)
+            # 阶段1：其他消息（ACK、调试信息等）
+            else:
+                if self.on_message:
+                    self.on_message(line)
                 
         except Exception as e:
             self.logger.warning(f"数据解析失败: {line[:50]}... 错误: {e}")
@@ -391,7 +398,7 @@ class RobotCommBLE:
     
     def request_lidar_scan(self) -> bool:
         """请求雷达扫描"""
-        return self._send_command("A")
+        return self._send_command("A\n")  # 修复：添加换行符
     
     def stop_robot(self) -> bool:
         """紧急停止机器人"""

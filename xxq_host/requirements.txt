@@ -5,7 +5,8 @@ numpy>=1.24.0              # 数值计算
 scipy>=1.10.0              # 科学计算（滤波、优化）
 
 # 串口通信
-pyserial>=3.5              # 蓝牙串口通信
+pyserial>=3.5              # 串口通信（COM口）
+bleak>=0.20.0              # BLE低功耗蓝牙通信（HC-04BLE等）
 
 # 可视化
 matplotlib>=3.7.0          # 实时地图可视化

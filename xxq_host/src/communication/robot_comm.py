@@ -267,7 +267,7 @@ class RobotComm:
     
     def request_lidar_scan(self):
         """请求雷达扫描"""
-        self._send_command("A")
+        self._send_command("A\n")  # 修复：添加换行符
     
     def stop_robot(self):
         """紧急停止机器人"""

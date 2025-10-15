@@ -1,0 +1,260 @@
+---
+description: Configuration management and parameter synchronization between firmware and Python
+globs: **/config.py,**/main.c
+---
+
+# 配置管理规范
+
+本规则确保STM32固件端和Python主机端的参数保持同步。
+
+## 关键配置文件
+
+### Python端配置
+- **文件**: [config.py](mdc:xxq_host/config.py)
+- **作用**: 所有Python端可配置参数的中心化管理
+
+### 固件端配置
+- **文件**: [main.c](mdc:xxq/Core/Src/main.c) (约318-320行)
+- **作用**: 机器人物理参数和控制参数
+
+## ⚠️ 必须同步的参数
+
+以下参数在固件端和Python端必须完全一致：
+
+### 1. 机器人物理参数
+```python
+# xxq_host/config.py
+WHEEL_BASE = 0.20        # 轮距（米）
+WHEEL_RADIUS = 0.033     # 轮半径（米）
+ENCODER_PPR = 1560       # 左轮编码器每转脉冲数
+ENCODER_PPR_RIGHT = 780  # 右轮编码器每转脉冲数
+```
+
+```c
+// xxq/Core/Src/main.c
+#define WHEEL_BASE      0.20f    // 轮距（米）
+#define WHEEL_RADIUS    0.033f   // 轮半径（米）
+#define ENCODER_PPR_LEFT  1560   // 左轮编码器分辨率
+#define ENCODER_PPR_RIGHT 780    // 右轮编码器分辨率
+```
+
+**为什么必须同步？**
+- 位姿估计依赖这些参数
+- 速度控制依赖轮子半径
+- 不同步会导致路径偏差和控制失效
+
+### 2. 通信参数
+```python
+# xxq_host/config.py
+SERIAL_BAUDRATE = 115200
+SERIAL_TIMEOUT = 1.0
+```
+
+```c
+// xxq/Core/Src/usart.c (STM32CubeMX生成)
+huart4.Init.BaudRate = 115200;
+```
+
+## 参数修改流程
+
+### ✅ 正确流程
+1. **确定需要修改的参数**
+   - 例如：轮距从0.20m改为0.22m
+
+2. **同时修改两端代码**
+   ```python
+   # xxq_host/config.py
+   WHEEL_BASE = 0.22  # 修改1/2
+   ```
+   
+   ```c
+   // xxq/Core/Src/main.c
+   #define WHEEL_BASE 0.22f  // 修改2/2
+   ```
+
+3. **重新编译和部署**
+   - STM32端：重新编译固件并烧录
+   - Python端：重启应用（Python会重新读取config.py）
+
+4. **验证参数同步**
+   - 运行运动测试脚本
+   - 检查直线行驶是否偏离
+   - 检查转向是否准确
+
+### ❌ 错误做法
+```python
+# ❌ 不要在代码中硬编码参数
+def calculate_velocity(left_rps, right_rps):
+    wheel_base = 0.20  # 错误！应该从config导入
+    v = ...
+```
+
+```python
+# ✅ 正确做法
+from config import WHEEL_BASE
+
+def calculate_velocity(left_rps, right_rps):
+    v = ...  # 使用WHEEL_BASE
+```
+
+## 配置文件结构
+
+### Python端 config.py 组织
+```python
+# ==========================================
+# 机器人物理参数（必须与固件同步）
+# ==========================================
+WHEEL_BASE = 0.20
+WHEEL_RADIUS = 0.033
+ENCODER_PPR = 1560
+ENCODER_PPR_RIGHT = 780
+
+# ==========================================
+# 通信配置
+# ==========================================
+SERIAL_PORT = 'COM5'
+SERIAL_BAUDRATE = 115200
+
+# ==========================================
+# SLAM配置
+# ==========================================
+MAP_WIDTH = 200
+MAP_HEIGHT = 200
+MAP_RESOLUTION = 0.1
+
+# ==========================================
+# 导航配置
+# ==========================================
+DWA_MAX_SPEED = 0.5
+DWA_MAX_YAW_RATE = 90.0
+PATH_ALLOW_DIAGONAL = True
+
+# ==========================================
+# 可视化配置
+# ==========================================
+PLOT_UPDATE_RATE = 30
+ENABLE_WEB_VIEWER = True
+```
+
+## 参数验证工具
+
+### 检查参数同步性
+创建脚本自动检查参数一致性：
+
+```python
+# scripts/check_param_sync.py
+def check_firmware_params():
+    """检查固件端参数与config.py是否一致"""
+    import re
+    from config import WHEEL_BASE, WHEEL_RADIUS
+    
+    with open('xxq/Core/Src/main.c', 'r', encoding='utf-8') as f:
+        content = f.read()
+        
+    # 提取固件端参数
+    wb_match = re.search(r'#define\s+WHEEL_BASE\s+([\d.]+)f', content)
+    wr_match = re.search(r'#define\s+WHEEL_RADIUS\s+([\d.]+)f', content)
+    
+    if wb_match:
+        fw_wheel_base = float(wb_match.group(1))
+        if abs(fw_wheel_base - WHEEL_BASE) > 1e-6:
+            print(f"❌ WHEEL_BASE不同步: 固件={fw_wheel_base}, config.py={WHEEL_BASE}")
+        else:
+            print(f"✅ WHEEL_BASE同步: {WHEEL_BASE}")
+    
+    # ... 其他参数检查
+```
+
+## 环境变量支持
+
+对于部署环境，支持环境变量覆盖：
+
+```python
+# config.py
+import os
+
+# 允许环境变量覆盖
+SERIAL_PORT = os.getenv('ROBOT_SERIAL_PORT', 'COM5')
+SERIAL_BAUDRATE = int(os.getenv('ROBOT_BAUDRATE', '115200'))
+
+# 但物理参数不应该被环境变量修改
+WHEEL_BASE = 0.20  # 固定值
+```
+
+## 配置版本控制
+
+### 添加版本信息
+```python
+# config.py
+CONFIG_VERSION = "1.0.0"
+
+# 与固件版本对应
+FIRMWARE_VERSION_REQUIRED = "1.0.0"
+```
+
+```c
+// main.c
+#define FIRMWARE_VERSION "1.0.0"
+```
+
+### 启动时验证版本
+```python
+# 在应用启动时检查版本兼容性
+def check_firmware_version(comm):
+    """检查固件版本是否兼容"""
+    fw_version = comm.get_firmware_version()
+    if fw_version != FIRMWARE_VERSION_REQUIRED:
+        raise RuntimeError(f"固件版本不匹配: 需要{FIRMWARE_VERSION_REQUIRED}, 实际{fw_version}")
+```
+
+## 单位约定
+
+所有配置参数使用统一单位：
+
+| 物理量 | 单位 | 示例参数 |
+|-------|------|---------|
+| 距离 | 米 (m) | `WHEEL_RADIUS = 0.033` |
+| 速度 | 米/秒 (m/s) | `DWA_MAX_SPEED = 0.5` |
+| 角度 | 度 (°) | `DWA_MAX_YAW_RATE = 90.0` |
+| 角速度 | 度/秒 (°/s) | `MAX_TURN_RATE = 180.0` |
+| 时间 | 秒 (s) | `DWA_DT = 0.1` |
+| 频率 | 赫兹 (Hz) | `MPU_UPDATE_RATE = 50` |
+
+**注意**: STM32固件内部可能使用弧度，但配置文件统一使用度。
+
+## 配置文档化
+
+每个重要参数必须包含注释：
+
+```python
+# 好的示例
+DWA_MAX_SPEED = 0.5  # 最大线速度（m/s），建议范围：0.2-1.0
+DWA_MAX_YAW_RATE = 90.0  # 最大角速度（°/s），建议范围：45-180
+DWA_WEIGHT_HEADING = 0.1  # 朝向得分权重（0-1），值越大越倾向于朝向目标
+
+# 关键参数应包含调整指南
+PATH_INFLATION_RADIUS = 2  # 障碍物膨胀半径（栅格数）
+                           # 增大可提高安全性但减少可行路径
+                           # 减小可通过狭窄区域但可能碰撞
+```
+
+## 参数调优日志
+
+记录参数调整历史：
+
+```python
+# config.py
+# ==========================================================
+# 参数调整历史
+# ==========================================================
+# 2024-10-14: 将DWA_MAX_SPEED从0.3改为0.5（提高探索速度）
+# 2024-10-13: 将MAP_RESOLUTION从0.05改为0.1（减少内存占用）
+# 2024-10-12: 初始配置
+# ==========================================================
+```
+
+## 参考文档
+
+- 参数同步检查表: [xxq/docs/参数同步检查表.md](mdc:xxq/docs/参数同步检查表.md)
+- 主配置文件: [xxq_host/config.py](mdc:xxq_host/config.py)
+- 固件参数位置: [xxq/Core/Src/main.c](mdc:xxq/Core/Src/main.c) (第318-320行)

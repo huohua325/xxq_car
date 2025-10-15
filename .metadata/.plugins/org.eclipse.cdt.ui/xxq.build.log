@@ -1,6 +1,84 @@
-16:06:14 **** Incremental Build of configuration Debug for project xxq ****
+22:39:22 **** Incremental Build of configuration Debug for project xxq ****
 make -j16 all 
 arm-none-eabi-gcc "../Core/Src/hardware/radar.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DUSE_HAL_DRIVER -DSTM32F446xx -DDEBUG -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/hardware/radar.d" -MT"Core/Src/hardware/radar.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/hardware/radar.o"
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DUSE_HAL_DRIVER -DSTM32F446xx -DDEBUG -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+../Core/Src/hardware/radar.c:620:12: warning: 'Radar_DetectBestOffset' defined but not used [-Wunused-function]
+  620 | static int Radar_DetectBestOffset(uint8_t *buffer, uint16_t buffer_size)
+      |            ^~~~~~~~~~~~~~~~~~~~~~
+../Core/Src/main.c: In function 'Command_ProcessUserInput':
+../Core/Src/main.c:661:29: warning: '
++=========================...' directive output truncated writing 68 bytes into a region of size 41 [-Wformat-truncation=]
+  661 |                             "\r\n+==================== MPU6500 DATA ANALYSIS ====================+\r\n"
+      |                             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+../Core/Src/main.c:672:69: note: format string is defined here
+  671 |                             "|   %s\r\n"
+      |                                    ~~~~~                             
+  672 |                             "+============================================================+\r\n\r\n",
+      |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+../Core/Src/main.c:660:21: note: 'snprintf' output 678 or more bytes into a destination of size 650
+  660 |                     snprintf(analysis, sizeof(analysis),
+      |                     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  661 |                             "\r\n+==================== MPU6500 DATA ANALYSIS ====================+\r\n"
+      |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  662 |                             "| SENSOR ORIENTATION ANALYSIS:                               |\r\n"
+      |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  663 |                             "|   Roll:  %6.1f° %s\r\n"
+      |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~
+  664 |                             "|   Pitch: %6.1f° %s\r\n"
+      |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~
+  665 |                             "|                                                            |\r\n"
+      |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  666 |                             "| MOTION ANALYSIS:                                           |\r\n"
+      |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  667 |                             "|   Accel Total: %5.2f m/s² (Normal ~9.8 when static)       |\r\n"
+      |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  668 |                             "|   Gyro Total:  %5.2f deg/s (Normal ~0 when static)        |\r\n"
+      |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  669 |                             "|                                                            |\r\n"
+      |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  670 |                             "| INSTALLATION CHECK:                                        |\r\n"
+      |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  671 |                             "|   %s\r\n"
+      |                             ~~~~~~~~~~~~
+  672 |                             "+============================================================+\r\n\r\n",
+      |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  673 |                             roll,
+      |                             ~~~~~
+  674 |                             (fabs(roll) < 10) ? "(Good)" : (fabs(roll) > 45) ? "(WRONG ORIENTATION!)" : "(Tilted)",
+      |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  675 |                             pitch,
+      |                             ~~~~~~
+  676 |                             (fabs(pitch) < 10) ? "(Good)" : (fabs(pitch) > 45) ? "(WRONG ORIENTATION!)" : "(Tilted)",
+      |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  677 |                             sqrtf(calib_data.Accel_X*calib_data.Accel_X + calib_data.Accel_Y*calib_data.Accel_Y + calib_data.Accel_Z*calib_data.Accel_Z) * 9.80665f / 16384.0f,
+      |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  678 |                             sqrtf(calib_data.Gyro_X*calib_data.Gyro_X + calib_data.Gyro_Y*calib_data.Gyro_Y + calib_data.Gyro_Z*calib_data.Gyro_Z) / 131.0f,
+      |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  679 |                             (fabs(roll) > 45 || fabs(pitch) > 45) ?
+      |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  680 |                             "WARNING: Sensor appears incorrectly mounted!" :
+      |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  681 |                             (fabs(roll) < 5 && fabs(pitch) < 5) ?
+      |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  682 |                             "GOOD: Sensor is properly oriented" :
+      |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  683 |                             "OK: Sensor slightly tilted but acceptable");
+      |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+../Core/Src/main.c: In function 'Python_ParseCommand':
+../Core/Src/main.c:1377:68: warning: '%s' directive output may be truncated writing up to 255 bytes into a region of size 105 [-Wformat-truncation=]
+ 1377 |     snprintf(debug_msg, sizeof(debug_msg), "[Python CMD] Received: %s\r\n", rx_command_buffer);
+      |                                                                    ^~       ~~~~~~~~~~~~~~~~~
+../Core/Src/main.c:1377:5: note: 'snprintf' output between 26 and 281 bytes into a destination of size 128
+ 1377 |     snprintf(debug_msg, sizeof(debug_msg), "[Python CMD] Received: %s\r\n", rx_command_buffer);
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+../Core/Src/main.c:1581:48: warning: '%s' directive output may be truncated writing up to 255 bytes into a region of size 98 [-Wformat-truncation=]
+ 1581 |                 "[Python CMD] Unknown command: %s\r\n", rx_command_buffer);
+      |                                                ^~       ~~~~~~~~~~~~~~~~~
+../Core/Src/main.c:1580:9: note: 'snprintf' output between 33 and 288 bytes into a destination of size 128
+ 1580 |         snprintf(error_msg, sizeof(error_msg),
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1581 |                 "[Python CMD] Unknown command: %s\r\n", rx_command_buffer);
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 arm-none-eabi-gcc -o "xxq.elf" @"objects.list"   -mcpu=cortex-m4 -T"D:\Programs\STM32CubeIDE\workspace\xxq\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="xxq.map" -Wl,--gc-sections -static -u _printf_float --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 D:/Programs/STM32CubeIDE/STM32CubeIDE_1.19.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.win32_1.0.0.202411081344/tools/bin/../lib/gcc/arm-none-eabi/13.3.1/../../../../arm-none-eabi/bin/ld.exe: warning: xxq.elf has a LOAD segment with RWX permissions
 Finished building target: xxq.elf
@@ -8,11 +86,11 @@ Finished building target: xxq.elf
 arm-none-eabi-size  xxq.elf 
 arm-none-eabi-objdump -h -S xxq.elf  > "xxq.list"
    text	   data	    bss	    dec	    hex	filename
-  78608	    512	   3328	  82448	  14210	xxq.elf
+  90856	    516	   3340	  94712	  171f8	xxq.elf
 Finished building: default.size.stdout
  
 Finished building: xxq.list
  
 
-16:06:16 Build Finished. 0 errors, 1 warnings. (took 1s.710ms)
+22:39:23 Build Finished. 0 errors, 5 warnings. (took 1s.91ms)
 

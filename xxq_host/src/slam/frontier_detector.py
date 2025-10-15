@@ -232,6 +232,68 @@ class FrontierDetector:
         
         return best_frontier
     
+    def select_best_frontier_goal_directed(self,
+                                          frontiers: List[Tuple[float, float]], 
+                                          robot_pose: Tuple[float, float, float],
+                                          goal_position: Tuple[float, float],
+                                          alpha: float = 0.6) -> Optional[Tuple[float, float]]:
+        """
+        选择朝向目标方向的最佳前沿点（考试专用）
+        
+        Args:
+            frontiers: 前沿点列表 [(x1, y1), (x2, y2), ...]
+            robot_pose: 机器人位姿 (x, y, theta)
+            goal_position: 目标位置 (x, y)，例如Exit坐标
+            alpha: 距离权重 (0.6=稍微偏向距离，0.4偏向目标方向)
+            
+        Returns:
+            最佳前沿点坐标 (x, y) 或 None
+        """
+        if not frontiers:
+            return None
+        
+        robot_x, robot_y = robot_pose[0], robot_pose[1]
+        goal_x, goal_y = goal_position
+        
+        # 机器人到目标的方向向量
+        goal_vec = np.array([goal_x - robot_x, goal_y - robot_y])
+        goal_dist = np.linalg.norm(goal_vec)
+        
+        # 如果已经很接近目标，选择最近的frontier
+        if goal_dist < 0.35:  # 半个格子
+            print("[Frontier] 接近目标，选择最近frontier")
+            return self._select_nearest(frontiers, robot_x, robot_y)
+        
+        goal_vec = goal_vec / goal_dist  # 单位向量
+        
+        best_score = -float('inf')
+        best_frontier = None
+        
+        for fx, fy in frontiers:
+            # 到frontier的距离
+            dist_to_frontier = np.hypot(fx - robot_x, fy - robot_y)
+            
+            # 到frontier的方向向量
+            frontier_vec = np.array([fx - robot_x, fy - robot_y])
+            frontier_vec = frontier_vec / (np.linalg.norm(frontier_vec) + 1e-6)
+            
+            # 与目标方向的余弦相似度 (-1到1)
+            direction_similarity = np.dot(frontier_vec, goal_vec)
+            
+            # 综合评分
+            # 距离评分：1/(1+dist)，越近越好
+            distance_score = 1.0 / (1.0 + dist_to_frontier)
+            
+            # 最终评分
+            score = alpha * distance_score + (1 - alpha) * direction_similarity
+            
+            if score > best_score:
+                best_score = score
+                best_frontier = (fx, fy)
+        
+        print(f"[Frontier] 目标导向: frontier={best_frontier}, 评分={best_score:.2f}")
+        return best_frontier
+    
     def find_frontiers_with_info(self) -> List[Dict]:
         """查找前沿点并返回详细信息
         

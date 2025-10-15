@@ -1,0 +1,463 @@
+---
+description: Debugging and troubleshooting guidelines for hardware and software issues
+---
+
+# 调试与故障排查指南
+
+本规则提供系统调试和常见问题解决方案。
+
+## 快速诊断流程
+
+### 1. 系统健康检查
+```bash
+# 运行快速系统测试（5分钟）
+python tests/test_system_comprehensive.py --port COM5 --quick
+
+# 预期输出：
+# ✅ 串口连接成功
+# ✅ 接收到位姿数据
+# ✅ 接收到MPU数据
+# ✅ 接收到里程计数据
+# ✅ 雷达扫描成功
+```
+
+### 2. 分层诊断
+
+**Level 1: 硬件连接**
+```python
+# 检查串口连接
+python scripts/find_stm32_port.py
+
+# 或手动测试
+import serial
+ser = serial.Serial('COM5', 115200, timeout=1)
+print(ser.readline())  # 应该看到数据流
+```
+
+**Level 2: 数据流**
+```bash
+# 查看原始数据（Windows）
+mode COM5: BAUD=115200 PARITY=N DATA=8 STOP=1
+type COM5
+
+# 或使用Python脚本
+python scripts/test_stage1_communication.py
+```
+
+**Level 3: 模块功能**
+```bash
+# 测试位姿估计
+python scripts/test_pose_estimation.py
+
+# 测试SLAM建图
+pytest tests/test_slam.py -v
+
+# 测试路径规划
+pytest tests/test_navigation.py -v
+```
+
+## 常见问题与解决方案
+
+### 🔴 问题1: 无法连接串口
+
+**症状**:
+```
+serial.SerialException: could not open port 'COM5': 
+PermissionError: [Errno 13] Permission denied
+```
+
+**原因**:
+- 串口已被其他程序占用
+- 驱动未正确安装
+- 权限不足（Linux）
+
+**解决方案**:
+```python
+# 1. 检查端口占用
+python scripts/find_stm32_port.py
+
+# 2. 关闭占用端口的程序
+# - Arduino IDE
+# - PuTTY / TeraTerm
+# - 其他Python脚本
+
+# 3. Linux权限问题
+sudo usermod -a -G dialout $USER  # 添加用户到dialout组
+sudo chmod 666 /dev/ttyUSB0       # 或直接修改权限
+```
+
+### 🔴 问题2: 接收不到数据
+
+**症状**:
+```python
+# read_sensor_data() 返回 None
+data = comm.read_sensor_data(timeout=5.0)
+assert data is None  # 超时
+```
+
+**诊断步骤**:
+1. **检查固件是否运行**
+   ```
+   # STM32调试器中检查主循环是否执行
+   # 或观察LED是否闪烁
+   ```
+
+2. **检查波特率匹配**
+   ```python
+   # config.py
+   SERIAL_BAUDRATE = 115200  # 必须与固件一致
+   ```
+
+3. **检查UART配置**
+   ```c
+   // xxq/Core/Src/usart.c
+   huart4.Init.BaudRate = 115200;
+   huart4.Init.WordLength = UART_WORDLENGTH_8B;
+   huart4.Init.StopBits = UART_STOPBITS_1;
+   huart4.Init.Parity = UART_PARITY_NONE;
+   ```
+
+4. **使用调试命令**
+   ```python
+   # 发送简单命令测试通信
+   ser.write(b'?')  # 请求帮助
+   print(ser.read(100))  # 应该收到响应
+   ```
+
+### 🔴 问题3: 机器人不动或运动异常
+
+**症状**:
+- 发送速度命令但电机不转
+- 机器人转向错误
+- 直线行驶偏离
+
+**诊断步骤**:
+1. **测试电机驱动**
+   ```python
+   # 直接发送速度命令
+   comm.send_speed_command(1.0, 1.0)  # 左右轮相同速度
+   
+   # 观察：
+   # - 两轮是否同时转动
+   # - 转速是否相近
+   # - 方向是否正确
+   ```
+
+2. **检查编码器反馈**
+   ```python
+   # 查看里程计数据
+   odo = comm.read_odometry()
+   print(f"左轮: {odo['left_rps']:.2f} RPS")
+   print(f"右轮: {odo['right_rps']:.2f} RPS")
+   
+   # 预期：发送1.0 RPS命令时，应该接收到~1.0 RPS反馈
+   ```
+
+3. **校验物理参数**
+   ```python
+   # 检查WHEEL_BASE和WHEEL_RADIUS是否正确
+   from config import WHEEL_BASE, WHEEL_RADIUS
+   print(f"轮距: {WHEEL_BASE}m")
+   print(f"轮半径: {WHEEL_RADIUS}m")
+   
+   # 实际测量机器人并对比
+   ```
+
+4. **运行PWM标定**
+   ```bash
+   python pwm_calibration.py
+   # 检查PWM与速度的线性关系
+   ```
+
+### 🔴 问题4: 雷达数据异常
+
+**症状**:
+- 雷达返回空数据
+- 距离值全为0或异常大
+- JSON解析失败
+
+**解决方案**:
+```python
+# 1. 手动触发扫描
+comm.request_lidar_scan()
+time.sleep(2)  # 等待扫描完成
+data = comm.read_lidar_data()
+
+# 2. 检查JSON格式
+import json
+try:
+    parsed = json.loads(raw_data)
+except json.JSONDecodeError as e:
+    print(f"JSON解析错误: {e}")
+    print(f"原始数据: {raw_data}")
+
+# 3. 验证扇区数据
+if 'sectors' in data:
+    for sector in data['sectors']:
+        print(f"扇区{sector['sector_id']}: "
+              f"点数={sector['count']}, "
+              f"平均距离={sector['avg_dist']:.2f}m")
+```
+
+### 🔴 问题5: 位姿估计漂移
+
+**症状**:
+- 机器人静止时位姿仍在变化
+- 直线行驶时Y坐标变化
+- 转向角度不准确
+
+**原因**:
+- 编码器脉冲数配置错误
+- IMU零点漂移
+- 轮子打滑
+
+**解决方案**:
+```python
+# 1. 重置位姿
+comm.reset_pose(0.0, 0.0, 0.0)
+
+# 2. 静态测试（机器人不动）
+for i in range(50):
+    pose = comm.read_pose()
+    print(f"{i}: x={pose['x']:.4f}, y={pose['y']:.4f}, theta={pose['theta']:.4f}")
+    time.sleep(0.1)
+# 预期：x, y, theta 应该保持不变或微小波动
+
+# 3. 直线测试
+comm.send_speed_command(1.0, 1.0)
+time.sleep(3)
+comm.send_speed_command(0, 0)
+final_pose = comm.read_pose()
+print(f"Y偏移: {final_pose['y']:.4f}m")  # 应该接近0
+
+# 4. 检查编码器配置
+# config.py 和 main.c 中的 ENCODER_PPR 必须一致
+```
+
+### 🔴 问题6: SLAM地图质量差
+
+**症状**:
+- 墙壁模糊不清
+- 大量噪点
+- 前沿检测失败
+
+**调优参数**:
+```python
+# config.py
+
+# 1. 调整占据概率阈值
+MAP_PROB_OCCUPIED = 0.9   # 增大可减少误判为障碍物
+MAP_PROB_FREE = 0.3       # 减小可更快标记为空闲
+
+# 2. 调整地图分辨率
+MAP_RESOLUTION = 0.1  # 更小的值=更高分辨率（但占用更多内存）
+
+# 3. 调整前沿检测参数
+FRONTIER_CLUSTER_DIST = 3      # 前沿点聚类距离（栅格数）
+MIN_FRONTIER_SIZE = 10         # 最小前沿簇大小
+MAP_FREE_THRESHOLD = 0.3       # 空闲栅格阈值
+```
+
+### 🔴 问题7: 路径规划失败
+
+**症状**:
+- `plan_path()` 返回 `None`
+- 路径过于曲折
+- 撞墙或卡住
+
+**解决方案**:
+```python
+# 1. 可视化障碍物地图
+import matplotlib.pyplot as plt
+plt.imshow(occupancy_map.grid > PATH_OBSTACLE_THRESHOLD)
+plt.colorbar()
+plt.show()
+
+# 2. 调整障碍物膨胀
+PATH_INFLATION_RADIUS = 3  # 增大提高安全性，减小可通过狭窄区域
+
+# 3. 启用对角线移动
+PATH_ALLOW_DIAGONAL = True
+PATH_DIAGONAL_COST = 1.414  # √2
+
+# 4. 调整路径平滑
+PATH_SMOOTHING_TOLERANCE = 0.5  # 更大的值=更平滑但可能偏离
+```
+
+### 🔴 问题8: DWA避障不工作
+
+**症状**:
+- 机器人撞到障碍物
+- 速度选择不合理
+- 震荡或卡死
+
+**调试代码**:
+```python
+from src.navigation.dwa import DWA
+import matplotlib.pyplot as plt
+
+dwa = DWA(occupancy_map)
+
+# 可视化动态窗口
+v_range, w_range = dwa.calculate_dynamic_window(current_v, current_w)
+print(f"线速度范围: {v_range}")
+print(f"角速度范围: {w_range}")
+
+# 调整评价函数权重
+DWA_WEIGHT_HEADING = 0.1    # 朝向得分权重
+DWA_WEIGHT_CLEARANCE = 0.5  # 障碍物距离权重
+DWA_WEIGHT_VELOCITY = 0.4   # 速度得分权重
+
+# 增大安全距离
+DWA_MIN_CLEARANCE = 0.3  # 最小安全距离（米）
+```
+
+## 日志调试
+
+### 启用详细日志
+```python
+import logging
+
+# 设置日志级别
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('robot_debug.log'),
+        logging.StreamHandler()
+    ]
+)
+
+# 针对特定模块
+logging.getLogger('src.communication').setLevel(logging.DEBUG)
+logging.getLogger('src.slam').setLevel(logging.INFO)
+```
+
+### 日志示例
+```python
+logger = logging.getLogger(__name__)
+
+def process_sensor_data(data):
+    logger.debug(f"收到数据: {data}")
+    
+    try:
+        parsed = parse_data(data)
+        logger.info(f"解析成功: {parsed}")
+    except Exception as e:
+        logger.error(f"解析失败: {e}", exc_info=True)
+```
+
+## 性能分析
+
+### 测量执行时间
+```python
+import time
+
+def profile_function(func):
+    """装饰器：测量函数执行时间"""
+    def wrapper(*args, **kwargs):
+        start = time.time()
+        result = func(*args, **kwargs)
+        elapsed = time.time() - start
+        print(f"{func.__name__} 耗时: {elapsed:.3f}s")
+        return result
+    return wrapper
+
+@profile_function
+def update_map_with_lidar(lidar_data, pose):
+    # ... 实现
+    pass
+```
+
+### 性能基准
+| 操作 | 目标时间 | 超时警告 |
+|------|---------|---------|
+| 地图更新 | <50ms | >100ms |
+| 前沿检测 | <100ms | >200ms |
+| 路径规划 | <500ms | >1000ms |
+| DWA计算 | <100ms | >200ms |
+
+## 硬件调试
+
+### STM32端调试
+```c
+// 1. 使用printf调试（需要配置UART重定向）
+printf("DEBUG: left_rps=%.2f, right_rps=%.2f\n", left_rps, right_rps);
+
+// 2. 使用断点调试（STM32CubeIDE）
+// - 设置断点
+// - 查看变量值
+// - 单步执行
+
+// 3. 监视关键变量
+// - 在STM32CubeIDE中添加到"Expressions"窗口
+volatile float debug_left_rps = 0;
+volatile float debug_right_rps = 0;
+```
+
+### 示波器/逻辑分析仪（可选）
+- 查看编码器脉冲信号
+- 验证PWM频率和占空比
+- 分析I2C/SPI时序
+
+## 测试驱动调试
+
+### 隔离问题
+```python
+# 创建最小复现案例
+def test_minimal_reproduction():
+    """最小化问题复现"""
+    from src.slam.occupancy_map import OccupancyGridMap
+    
+    map = OccupancyGridMap(10, 10, 0.1)
+    # 仅测试有问题的功能
+    map.update_cell(5, 5, 0.9)
+    
+    assert map.get_cell(5, 5) == 0.9
+```
+
+## 紧急停止
+
+### 远程停止机器人
+```python
+# scripts/emergency_stop.py
+from src.communication.robot_comm import RobotComm
+
+with RobotComm(port='COM5') as comm:
+    comm.send_speed_command(0, 0)  # 立即停止
+    print("✅ 紧急停止成功")
+```
+
+```bash
+# 快捷键运行
+python scripts/emergency_stop.py
+```
+
+## 故障日志收集
+
+### 自动保存故障日志
+```python
+import traceback
+from datetime import datetime
+
+def save_error_log(error, context):
+    """保存错误日志到文件"""
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"data/logs/error_{timestamp}.log"
+    
+    with open(filename, 'w') as f:
+        f.write(f"时间: {datetime.now()}\n")
+        f.write(f"错误类型: {type(error).__name__}\n")
+        f.write(f"错误信息: {str(error)}\n")
+        f.write(f"上下文: {context}\n\n")
+        f.write("堆栈跟踪:\n")
+        f.write(traceback.format_exc())
+    
+    print(f"错误日志已保存: {filename}")
+```
+
+## 参考文档
+
+- 完整系统测试指南: [xxq_host/doc/完整系统测试指南.md](mdc:xxq_host/doc/完整系统测试指南.md)
+- 通信协议: [xxq_host/doc/硬件通信协议详细说明.md](mdc:xxq_host/doc/硬件通信协议详细说明.md)
+- 测试脚本: [scripts/](mdc:xxq_host/scripts/)

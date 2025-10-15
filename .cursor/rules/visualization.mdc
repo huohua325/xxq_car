@@ -1,0 +1,475 @@
+---
+description: Visualization and UI guidelines for matplotlib and web components
+globs: **/visualization/*.py,**/templates/*.html
+---
+
+# 可视化开发规范
+
+本规则提供实时地图可视化和Web界面开发指南。
+
+## 可视化架构
+
+### 两种可视化方式
+
+**1. Matplotlib实时可视化**
+- **文件**: [xxq_host/src/visualization/slam_visualizer.py](mdc:xxq_host/src/visualization/slam_visualizer.py)
+- **用途**: 本地调试和开发
+- **性能**: 30-60 FPS
+- **交互**: 基础缩放、平移
+
+**2. Web可视化**
+- **文件**: [xxq_host/src/visualization/web_viewer.py](mdc:xxq_host/src/visualization/web_viewer.py)
+- **模板**: [xxq_host/templates/slam_viewer.html](mdc:xxq_host/templates/slam_viewer.html)
+- **用途**: 远程监控和演示
+- **技术栈**: Flask + WebSocket + Canvas API
+- **端口**: 默认 5000
+
+## Matplotlib可视化
+
+### 基础设置
+```python
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+from config import PLOT_UPDATE_RATE
+
+# 启用交互模式
+plt.ion()
+
+# 创建图形
+fig, ax = plt.subplots(figsize=(10, 10))
+ax.set_aspect('equal')
+ax.set_xlabel('X (m)')
+ax.set_ylabel('Y (m)')
+ax.set_title('SLAM地图实时显示')
+```
+
+### 高性能更新（Blitting）
+```python
+class SLAMVisualizer:
+    def __init__(self, occupancy_map):
+        self.map = occupancy_map
+        self.fig, self.ax = plt.subplots()
+        
+        # 预分配图像对象
+        self.map_img = self.ax.imshow(
+            self.map.grid,
+            cmap='gray',
+            origin='lower',
+            vmin=0,
+            vmax=1,
+            animated=True  # 启用blitting
+        )
+        
+        # 机器人位置
+        self.robot_marker, = self.ax.plot([], [], 'ro', markersize=10, animated=True)
+        
+        # 路径
+        self.path_line, = self.ax.plot([], [], 'b-', linewidth=2, animated=True)
+        
+        # Blitting背景
+        self.background = None
+    
+    def update(self, frame):
+        """更新显示（使用blitting加速）"""
+        # 仅更新变化的部分
+        self.map_img.set_data(self.map.grid)
+        
+        # 更新机器人位置
+        robot_x, robot_y = self.map.world_to_grid(self.robot_pose[0], self.robot_pose[1])
+        self.robot_marker.set_data([robot_x], [robot_y])
+        
+        # 更新路径
+        if self.path:
+            path_array = np.array(self.path)
+            self.path_line.set_data(path_array[:, 0], path_array[:, 1])
+        
+        return [self.map_img, self.robot_marker, self.path_line]
+    
+    def start_animation(self):
+        """启动动画"""
+        from config import PLOT_UPDATE_RATE
+        interval = 1000 / PLOT_UPDATE_RATE  # ms
+        
+        self.anim = FuncAnimation(
+            self.fig,
+            self.update,
+            interval=interval,
+            blit=True,  # 启用blitting
+            cache_frame_data=False
+        )
+        plt.show()
+```
+
+### 可视化元素
+
+#### 1. 占据栅格地图
+```python
+# 使用灰度图显示占据概率
+# 黑色 = 障碍物（prob=1.0）
+# 白色 = 空闲（prob=0.0）
+# 灰色 = 未知（prob=0.5）
+
+cmap = plt.cm.gray
+norm = plt.Normalize(vmin=0, vmax=1)
+img = ax.imshow(map.grid, cmap=cmap, norm=norm, origin='lower')
+plt.colorbar(img, ax=ax, label='占据概率')
+```
+
+#### 2. 前沿点
+```python
+# 前沿点用绿色星号标记
+frontier_points = detector.find_frontiers(robot_pose)
+for frontier in frontier_points:
+    fx, fy = frontier.center
+    ax.plot(fx, fy, 'g*', markersize=15, label='前沿点')
+```
+
+#### 3. 规划路径
+```python
+# 路径用蓝色线条显示
+if path:
+    path_array = np.array(path)
+    ax.plot(path_array[:, 0], path_array[:, 1], 'b-', linewidth=2, label='规划路径')
+```
+
+#### 4. 机器人位姿
+```python
+# 机器人用红色箭头表示（箭头方向=朝向）
+from matplotlib.patches import FancyArrow
+
+robot_x, robot_y, robot_theta = pose
+arrow_length = 0.5  # 米
+
+arrow = FancyArrow(
+    robot_x, robot_y,
+    arrow_length * np.cos(robot_theta),
+    arrow_length * np.sin(robot_theta),
+    width=0.2,
+    color='red',
+    label='机器人'
+)
+ax.add_patch(arrow)
+```
+
+#### 5. 雷达扫描线
+```python
+# 显示当前雷达扫描的射线
+for angle, distance in zip(angles, distances):
+    end_x = robot_x + distance * np.cos(angle + robot_theta)
+    end_y = robot_y + distance * np.sin(angle + robot_theta)
+    ax.plot([robot_x, end_x], [robot_y, end_y], 'y-', alpha=0.3, linewidth=0.5)
+```
+
+### 多子图布局
+```python
+# 创建多子图显示不同信息
+fig, axes = plt.subplots(2, 2, figsize=(12, 12))
+
+# 左上：占据地图
+axes[0, 0].imshow(map.grid, cmap='gray')
+axes[0, 0].set_title('占据栅格地图')
+
+# 右上：前沿地图
+frontier_map = detector.get_frontier_map()
+axes[0, 1].imshow(frontier_map, cmap='viridis')
+axes[0, 1].set_title('前沿检测')
+
+# 左下：路径规划
+axes[1, 0].imshow(map.grid, cmap='gray')
+if path:
+    path_array = np.array(path)
+    axes[1, 0].plot(path_array[:, 0], path_array[:, 1], 'b-')
+axes[1, 0].set_title('路径规划')
+
+# 右下：DWA速度采样
+axes[1, 1].scatter(v_samples, w_samples, c=scores, cmap='jet')
+axes[1, 1].set_xlabel('线速度 (m/s)')
+axes[1, 1].set_ylabel('角速度 (rad/s)')
+axes[1, 1].set_title('DWA速度评分')
+
+plt.tight_layout()
+```
+
+## Web可视化
+
+### Flask服务器设置
+```python
+# src/visualization/web_viewer.py
+from flask import Flask, render_template, jsonify
+from flask_socketio import SocketIO
+import numpy as np
+
+app = Flask(__name__, template_folder='../../templates')
+socketio = SocketIO(app)
+
+# 全局状态
+current_map = None
+current_pose = None
+current_path = None
+
+@app.route('/')
+def index():
+    """主页面"""
+    return render_template('slam_viewer.html')
+
+@app.route('/api/map')
+def get_map():
+    """获取当前地图数据"""
+    if current_map is None:
+        return jsonify({'error': 'No map data'})
+    
+    # 转换为JSON格式
+    map_data = {
+        'width': current_map.width,
+        'height': current_map.height,
+        'resolution': current_map.resolution,
+        'data': current_map.grid.tolist()
+    }
+    return jsonify(map_data)
+
+def emit_update():
+    """推送更新到客户端"""
+    data = {
+        'map': current_map.grid.tolist() if current_map else None,
+        'pose': current_pose,
+        'path': current_path
+    }
+    socketio.emit('update', data)
+
+def start_web_server(host='0.0.0.0', port=5000):
+    """启动Web服务器"""
+    socketio.run(app, host=host, port=port, debug=False)
+```
+
+### HTML/JavaScript前端
+```html
+<!-- templates/slam_viewer.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SLAM实时监控</title>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <style>
+        #map-canvas {
+            border: 1px solid black;
+            background-color: #f0f0f0;
+        }
+        .controls {
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>SLAM实时地图</h1>
+    
+    <div class="controls">
+        <button onclick="resetView()">重置视图</button>
+        <button onclick="togglePath()">显示/隐藏路径</button>
+        <span id="fps">FPS: --</span>
+    </div>
+    
+    <canvas id="map-canvas" width="800" height="800"></canvas>
+    
+    <script>
+        const canvas = document.getElementById('map-canvas');
+        const ctx = canvas.getContext('2d');
+        const socket = io();
+        
+        let mapData = null;
+        let robotPose = null;
+        let pathData = null;
+        let showPath = true;
+        
+        // 接收更新
+        socket.on('update', function(data) {
+            mapData = data.map;
+            robotPose = data.pose;
+            pathData = data.path;
+            drawMap();
+        });
+        
+        function drawMap() {
+            if (!mapData) return;
+            
+            const width = mapData.length;
+            const height = mapData[0].length;
+            const cellWidth = canvas.width / width;
+            const cellHeight = canvas.height / height;
+            
+            // 绘制栅格地图
+            for (let i = 0; i < width; i++) {
+                for (let j = 0; j < height; j++) {
+                    const prob = mapData[i][j];
+                    const gray = Math.floor((1 - prob) * 255);
+                    ctx.fillStyle = `rgb(${gray}, ${gray}, ${gray})`;
+                    ctx.fillRect(i * cellWidth, j * cellHeight, cellWidth, cellHeight);
+                }
+            }
+            
+            // 绘制路径
+            if (showPath && pathData) {
+                ctx.strokeStyle = 'blue';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                pathData.forEach((point, index) => {
+                    const x = point[0] * cellWidth;
+                    const y = point[1] * cellHeight;
+                    if (index === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                });
+                ctx.stroke();
+            }
+            
+            // 绘制机器人
+            if (robotPose) {
+                const [x, y, theta] = robotPose;
+                const px = x * cellWidth;
+                const py = y * cellHeight;
+                
+                // 机器人圆点
+                ctx.fillStyle = 'red';
+                ctx.beginPath();
+                ctx.arc(px, py, 5, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // 朝向箭头
+                const arrowLength = 20;
+                const endX = px + arrowLength * Math.cos(theta);
+                const endY = py + arrowLength * Math.sin(theta);
+                ctx.strokeStyle = 'red';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(px, py);
+                ctx.lineTo(endX, endY);
+                ctx.stroke();
+            }
+        }
+        
+        function togglePath() {
+            showPath = !showPath;
+            drawMap();
+        }
+        
+        function resetView() {
+            // 请求重新加载地图
+            socket.emit('request_map');
+        }
+    </script>
+</body>
+</html>
+```
+
+## 性能优化
+
+### 1. 降采样大地图
+```python
+def downsample_map(grid, factor=2):
+    """降采样地图以减少传输数据"""
+    h, w = grid.shape
+    new_h, new_w = h // factor, w // factor
+    downsampled = np.zeros((new_h, new_w))
+    
+    for i in range(new_h):
+        for j in range(new_w):
+            downsampled[i, j] = grid[i*factor:(i+1)*factor, 
+                                    j*factor:(j+1)*factor].mean()
+    
+    return downsampled
+```
+
+### 2. 增量更新
+```python
+# 仅传输变化的栅格
+def get_map_delta(old_map, new_map):
+    """计算地图变化"""
+    diff = np.abs(new_map - old_map) > 0.01
+    changed_cells = np.argwhere(diff)
+    
+    delta = {
+        'changed': changed_cells.tolist(),
+        'values': [new_map[i, j] for i, j in changed_cells]
+    }
+    return delta
+```
+
+### 3. 限制帧率
+```python
+from config import PLOT_UPDATE_RATE
+
+import time
+
+last_update_time = 0
+min_update_interval = 1.0 / PLOT_UPDATE_RATE  # 秒
+
+def should_update():
+    global last_update_time
+    current_time = time.time()
+    
+    if current_time - last_update_time >= min_update_interval:
+        last_update_time = current_time
+        return True
+    return False
+
+# 在主循环中使用
+if should_update():
+    visualizer.update()
+```
+
+## 调试可视化
+
+### 显示调试信息
+```python
+# 在地图上叠加文本信息
+def draw_debug_info(ax, pose, velocity, target):
+    """绘制调试信息"""
+    info_text = f"位置: ({pose[0]:.2f}, {pose[1]:.2f})\n"
+    info_text += f"朝向: {np.degrees(pose[2]):.1f}°\n"
+    info_text += f"速度: {velocity:.2f} m/s\n"
+    info_text += f"目标: ({target[0]:.2f}, {target[1]:.2f})"
+    
+    ax.text(0.02, 0.98, info_text,
+            transform=ax.transAxes,
+            verticalalignment='top',
+            bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8),
+            fontsize=10,
+            family='monospace')
+```
+
+### 保存可视化结果
+```python
+from datetime import datetime
+
+def save_visualization(fig, prefix='slam_map'):
+    """保存当前可视化到文件"""
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"data/test_outputs/{prefix}_{timestamp}.png"
+    fig.savefig(filename, dpi=150, bbox_inches='tight')
+    print(f"✅ 保存可视化: {filename}")
+```
+
+## 配置参数
+
+```python
+# config.py
+
+# ==========================================
+# 可视化配置
+# ==========================================
+PLOT_UPDATE_RATE = 30           # 可视化更新频率（Hz）
+ENABLE_WEB_VIEWER = True        # 启用Web可视化
+WEB_VIEWER_PORT = 5000          # Web服务器端口
+PLOT_SHOW_LIDAR_RAYS = False    # 显示雷达射线（影响性能）
+PLOT_SHOW_FRONTIERS = True      # 显示前沿点
+PLOT_SHOW_PATH = True            # 显示规划路径
+PLOT_FIGURE_SIZE = (10, 10)     # 图形尺寸（英寸）
+```
+
+## 参考文档
+
+- Web可视化使用指南: [xxq_host/doc/description/Web可视化使用指南.md](mdc:xxq_host/doc/description/Web可视化使用指南.md)
+- 可视化实现: [xxq_host/src/visualization/](mdc:xxq_host/src/visualization/)
+- Matplotlib文档: https://matplotlib.org/
+- Flask-SocketIO文档: https://flask-socketio.readthedocs.io/

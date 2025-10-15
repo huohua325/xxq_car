@@ -72,6 +72,43 @@
   - 位姿估计（卡尔曼滤波）
 - **应用范围**: 手动应用（通过description触发）
 
+### 7. **config-management.mdc** ⚙️ 配置管理 🆕
+- **用途**: 参数同步和配置管理
+- **包含内容**:
+  - 必须同步的参数（WHEEL_BASE等）
+  - 参数修改流程
+  - 配置文件组织
+  - 参数验证工具
+  - 单位约定
+  - 版本控制
+- **应用范围**: 
+  - 手动应用：配置相关问题
+  - 自动应用：`**/config.py`, `**/main.c`
+
+### 8. **debugging.mdc** 🔍 调试指南 🆕
+- **用途**: 故障排查和问题诊断
+- **包含内容**:
+  - 快速诊断流程
+  - 8大常见问题及解决方案
+  - 日志调试技巧
+  - 性能分析方法
+  - 硬件调试技巧
+  - 紧急停止方法
+- **应用范围**: 手动应用（通过description触发）
+
+### 9. **visualization.mdc** 🎨 可视化规范 🆕
+- **用途**: 实时地图可视化和Web界面开发
+- **包含内容**:
+  - Matplotlib实时可视化（Blitting优化）
+  - Web可视化（Flask + WebSocket）
+  - 可视化元素（地图/路径/前沿/机器人）
+  - 性能优化技巧
+  - 多子图布局
+  - 调试可视化
+- **应用范围**: 
+  - 手动应用：可视化相关问题
+  - 自动应用：`**/visualization/*.py`, `**/templates/*.html`
+
 ## 🎯 使用方式
 
 ### 自动应用
@@ -82,8 +119,10 @@
 | 所有文件 | `project-structure.mdc` |
 | `*.py` | `python-coding-style.mdc` |
 | `*.c`, `*.h` | `stm32-firmware.mdc` |
-| `communication/*.py` | `communication-protocol.mdc` |
+| `config.py`, `main.c` | `config-management.mdc` |
+| `communication/*.py`, `main.c` | `communication-protocol.mdc` |
 | `tests/*.py` | `testing-guidelines.mdc` |
+| `visualization/*.py`, `templates/*.html` | `visualization.mdc` |
 
 ### 手动应用
 在与AI对话时提及以下主题会触发相关规则：
@@ -91,6 +130,9 @@
 - **"通信协议"** → `communication-protocol.mdc`
 - **"测试"、"单元测试"** → `testing-guidelines.mdc`
 - **"SLAM算法"、"DWA"、"路径规划"** → `algorithms.mdc`
+- **"配置"、"参数同步"** → `config-management.mdc`
+- **"调试"、"故障"、"问题"** → `debugging.mdc`
+- **"可视化"、"地图显示"** → `visualization.mdc`
 
 ### 示例对话
 
@@ -101,12 +143,22 @@
   - 触发：`testing-guidelines.mdc`
 - "DWA算法的评价函数权重如何调整？"
   - 触发：`algorithms.mdc`
+- "如何同步固件端和Python端的WHEEL_BASE参数？"
+  - 触发：`config-management.mdc`
+- "机器人不动，如何调试？"
+  - 触发：`debugging.mdc`
+- "如何优化地图可视化性能？"
+  - 触发：`visualization.mdc`
 
 **✅ 编辑文件时**:
 - 打开 `src/slam/occupancy_map.py`
   - 自动应用：`project-structure.mdc` + `python-coding-style.mdc`
 - 打开 `xxq/Core/Src/main.c`
-  - 自动应用：`project-structure.mdc` + `stm32-firmware.mdc`
+  - 自动应用：`project-structure.mdc` + `stm32-firmware.mdc` + `config-management.mdc` + `communication-protocol.mdc`
+- 打开 `xxq_host/config.py`
+  - 自动应用：`project-structure.mdc` + `python-coding-style.mdc` + `config-management.mdc`
+- 打开 `src/visualization/slam_visualizer.py`
+  - 自动应用：`project-structure.mdc` + `python-coding-style.mdc` + `visualization.mdc`
 
 ## 📝 规则维护
 
@@ -119,6 +171,9 @@
 | 添加新模块 | `project-structure.mdc` |
 | 修改算法实现 | `algorithms.mdc` |
 | 修改测试流程 | `testing-guidelines.mdc` |
+| 添加新配置参数 | `config-management.mdc` |
+| 发现新问题和解决方案 | `debugging.mdc` |
+| 改进可视化功能 | `visualization.mdc` |
 
 ### 更新步骤
 1. 编辑对应的 `.mdc` 文件
@@ -151,10 +206,11 @@
 ## 🎉 总结
 
 这套规则涵盖了xxq智能小车项目的所有关键方面：
-- **6个规则文件**
+- **9个规则文件**（新增3个：配置管理、调试指南、可视化规范）
 - **覆盖STM32固件和Python主机端**
-- **包含算法、协议、测试、代码规范**
+- **包含算法、协议、测试、代码规范、调试、可视化**
 - **自动应用 + 手动触发**
+- **全方位开发支持：从编码到调试到优化**
 
 祝你开发顺利！🚀
 

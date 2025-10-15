@@ -29,6 +29,19 @@ logging.basicConfig(
     format='[%(levelname)s] %(message)s'
 )
 
+# 数据统计（必须在回调函数之前定义）
+data_stats = {
+    'mpu_count': 0,
+    'odo_count': 0,
+    'pose_count': 0,
+    'lidar_count': 0,
+    'ack_count': 0,  # 新增：统计收到的ACK确认
+    'start_time': 0
+}
+
+# 收到的其他消息（调试、确认等）
+other_messages = []
+
 def on_raw_message(line: str):
     """处理未解析的消息（STM32的调试信息、确认消息等）"""
     # 检查是否是确认消息
@@ -43,19 +56,6 @@ def on_raw_message(line: str):
         # 其他消息
         print(f"  💬 {line}")
         other_messages.append(line)
-
-# 数据统计
-data_stats = {
-    'mpu_count': 0,
-    'odo_count': 0,
-    'pose_count': 0,
-    'lidar_count': 0,
-    'ack_count': 0,  # 新增：统计收到的ACK确认
-    'start_time': 0
-}
-
-# 收到的其他消息（调试、确认等）
-other_messages = []
 
 def on_mpu_data(mpu_data):
     """MPU数据回调"""

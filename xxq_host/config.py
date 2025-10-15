@@ -5,20 +5,26 @@ import os
 import numpy as np
 
 # ============================================================================
-# 串口通信配置
+# 串口/BLE通信配置
 # ============================================================================
 SERIAL_PORT = 'COM5'               # Windows: 'COM5', Linux: '/dev/ttyUSB0'
 BAUDRATE = 9600                    # HC-05蓝牙模块默认波特率
 TIMEOUT = 1.0
 
+# BLE配置（Windows环境）
+BLE_ADDRESS = 'C4:25:01:20:02:8E'  # 小车BLE地址
+
 # ============================================================================
 # 机器人物理参数（⚠️ 必须与固件端保持一致！）
 # ============================================================================
 # 这些参数在固件端(xxq/Core/Src/main.c)也有定义，需要同步修改
-WHEEL_BASE = 0.20                  # 轮距（米）- 两驱动轮中心距离
-WHEEL_RADIUS = 0.033               # 轮子半径（米）
-ENCODER_PPR_LEFT = 1560            # 左轮编码器分辨率（脉冲/圈）
-ENCODER_PPR_RIGHT = 780            # 右轮编码器分辨率（脉冲/圈）
+WHEEL_BASE = 0.168                 # 轮距（米）- maze标定值
+WHEEL_RADIUS = 0.0387              # 轮子半径（米）- 根据调试数据修正
+LEFT_ENCODER_PPR = 1560            # 左轮编码器分辨率（四倍频）
+RIGHT_ENCODER_PPR = 780            # 右轮编码器分辨率（双倍频）
+# 兼容旧变量名
+ENCODER_PPR_LEFT = LEFT_ENCODER_PPR
+ENCODER_PPR_RIGHT = RIGHT_ENCODER_PPR
 
 # ⚠️ 重要提醒：
 # 修改 WHEEL_BASE, WHEEL_RADIUS, ENCODER_PPR 后，
@@ -40,11 +46,14 @@ POSE_UPDATE_RATE = 20              # Hz
 # ============================================================================
 # SLAM地图配置
 # ============================================================================
-MAP_WIDTH = 500                    # 栅格数量（X方向）
-MAP_HEIGHT = 500                   # 栅格数量（Y方向）
-MAP_RESOLUTION = 0.1               # 米/栅格（分辨率）
+MAP_WIDTH = 60                     # 栅格数量（X方向）- 3米/0.05米=60
+MAP_HEIGHT = 60                    # 栅格数量（Y方向）
+MAP_RESOLUTION = 0.05              # 米/栅格（分辨率）- 5cm精度
 MAP_ORIGIN_X = MAP_WIDTH // 2      # 地图原点X坐标（栅格）
 MAP_ORIGIN_Y = MAP_HEIGHT // 2     # 地图原点Y坐标（栅格）
+
+# 考试迷宫参数
+CELL_SIZE = 0.70                   # 迷宫格子尺寸（米）- 70cm
 
 # 占据概率阈值
 MAP_FREE_THRESHOLD = 0.3           # 空闲判定阈值（<0.3为空闲）
@@ -63,6 +72,11 @@ FRONTIER_SELECTION = 'nearest'     # 前沿选择策略
                                    # 'nearest' - 选择最近的
                                    # 'largest' - 选择最大的
                                    # 'information_gain' - 选择信息增益最大的
+
+# 考试专用：目标导向探索参数
+EXPLORATION_ALPHA = 0.6            # 目标导向权重（0.6=稍微偏向距离）
+GOAL_REACHED_THRESHOLD = 0.35      # 到达目标阈值（米）- 半个格子
+LIDAR_SCAN_TIMEOUT = 6.0           # 雷达扫描超时（秒）
 
 # ============================================================================
 # 路径规划配置（A*算法）
